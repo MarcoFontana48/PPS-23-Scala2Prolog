@@ -1,6 +1,9 @@
 package pps.exam.application
 
-@main
-def main(): Unit = {
-  println("Hello world!")
-}
+import org.apache.logging.log4j.LogManager
+
+object main:
+  private val logger = LogManager.getLogger(this.getClass)
+
+  def main(args: Array[String]): Unit =
+    logger.trace("Hello world!")
