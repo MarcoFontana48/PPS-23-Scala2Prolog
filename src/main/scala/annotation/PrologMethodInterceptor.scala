@@ -10,12 +10,25 @@ trait MethodInterceptor:
 
 trait PrologMethodUtils extends Logging:
   def extractSignature(prologMethod: PrologMethod): PrologMethodSignature =
-    val signature = prologMethod.signature()
-    logger.trace(s"extracted signature from @PrologMethod annotation: '$signature', extracting input and output variables...")
-    val input_vars = signature.split("->").head.trim.stripPrefix("(").stripSuffix(")").split(",").map(_.trim)
-    val output_vars = signature.split("->").last.trim.stripPrefix("{").stripSuffix("}").split(",").map(_.trim)
-    logger.trace(s"extracted input and output variables from signature: 'input=${input_vars.mkString("Array(", ", ", ")")}', 'output=${output_vars.mkString("Array(", ", ", ")")}'")
-    PrologMethodSignature(input_vars, output_vars)
+    prologMethod.signature() match
+      case signature if signature.isEmpty => 
+        logger.trace("signature is empty, returning default signature...")
+        PrologMethodSignature(Array.empty, Array.empty)
+      case signature =>
+        logger.trace(s"extracted signature from @PrologMethod annotation: '$signature', extracting input and output variables...")
+    
+        /* pattern: (X1,X2,..Xn) -> {Y1,Y2,..Yn} */
+        val pattern = "\\(([A-Z]\\w*(,\\s*[A-Z]\\w*)*)\\)\\s*->\\s*\\{([A-Z]\\w*(,\\s*[A-Z]\\w*)*)}".r
+        val matchOption = pattern.findFirstMatchIn(signature)
+    
+        matchOption match
+          case Some(m) =>
+            val input_vars = m.group(1).split(",").map(_.trim)
+            val output_vars = m.group(3).split(",").map(_.trim)
+            logger.trace(s"extracted input and output variables from signature: 'input=${input_vars.mkString("Array(", ", ", ")")}', 'output=${output_vars.mkString("Array(", ", ", ")")}'")
+            PrologMethodSignature(input_vars, output_vars)
+          case None =>
+            throw new IllegalArgumentException(s"Signature '$signature' is not formatted correctly")
 
 case class PrologMethodSignature(inputVars: Array[String], outputVars: Array[String])
 
