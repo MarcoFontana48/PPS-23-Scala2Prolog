@@ -15,5 +15,5 @@ public @interface PrologMethod {
     
     String[] types() default {};
     
-    String[] clauses() default "";
+    String[] clauses() default {};
 }
