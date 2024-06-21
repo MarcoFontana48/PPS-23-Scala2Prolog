@@ -10,21 +10,25 @@ trait MethodInterceptor:
 
 trait PrologMethodUtils extends Logging:
 
-  def extractTypes(prologMethod: PrologMethod): Type =
+  def extractPermutations(prologMethod: PrologMethod): Permutations = Permutations(prologMethod.predicate())
+  
+  def extractClauses(prologMethod: PrologMethod): Clauses = Clauses(prologMethod.clauses())
+
+  def extractTypes(prologMethod: PrologMethod): Types =
     prologMethod.types() match
       case types if types.isEmpty =>
         logger.trace("types is empty, returning default types...")
-        Type(Array.empty)
+        Types(Array.empty)
       case types =>
         logger.trace(s"extracted types from @PrologMethod annotation: '${types.mkString("Array(", ", ", ")")}'")
         types.foreach{ e => if !e.matches("(Int|String|Boolean|List\\[\\s*(Int|String|Boolean)\\s*])") then throw new IllegalArgumentException(s"Invalid type: '$e'. Valid types are 'Int', 'String', 'Boolean', 'List[Int]', 'List[String]', 'List[Boolean]'") }
-        Type(types)
-  
-  def extractSignature(prologMethod: PrologMethod): Signature =
+        Types(types)
+
+  def extractSignature(prologMethod: PrologMethod): Signatures =
     prologMethod.signature() match
       case signature if signature.isEmpty =>
         logger.trace("signature is empty, returning default signature...")
-        Signature(Array.empty, Array.empty)
+        Signatures(Array.empty, Array.empty)
       case signature =>
         logger.trace(s"extracted signature from @PrologMethod annotation: '$signature', extracting input and output variables...")
 
@@ -37,7 +41,7 @@ trait PrologMethodUtils extends Logging:
             val input_vars = m.group(1).split(",").map(_.trim)
             val output_vars = m.group(3).split(",").map(_.trim)
             logger.trace(s"extracted input and output variables from signature: 'input=${input_vars.mkString("Array(", ", ", ")")}', 'output=${output_vars.mkString("Array(", ", ", ")")}'")
-            Signature(input_vars, output_vars)
+            Signatures(input_vars, output_vars)
           case None =>
             throw new IllegalArgumentException(s"Signature '$signature' is not formatted correctly")
 

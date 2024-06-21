@@ -46,7 +46,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodSignature_default")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualSignature = extractSignature(annotation)
-      val expectedSignature = Signature(Array.empty, Array.empty)
+      val expectedSignature = Signatures(Array.empty, Array.empty)
 
       assert(actualSignature.inputVars === expectedSignature.inputVars)
       assert(actualSignature.outputVars === expectedSignature.outputVars)
@@ -56,7 +56,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodSignature_XY")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualSignature = extractSignature(annotation)
-      val expectedSignature = Signature(Array("X"), Array("Y"))
+      val expectedSignature = Signatures(Array("X"), Array("Y"))
 
       assert(actualSignature.inputVars === expectedSignature.inputVars)
       assert(actualSignature.outputVars === expectedSignature.outputVars)
@@ -66,7 +66,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodSignature_XXXYY")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualSignature = extractSignature(annotation)
-      val expectedSignature = Signature(Array("Var1", "VAR2", "X3"), Array("Y1", "Variabile2"))
+      val expectedSignature = Signatures(Array("Var1", "VAR2", "X3"), Array("Y1", "Variabile2"))
 
       assert(actualSignature.inputVars === expectedSignature.inputVars)
       assert(actualSignature.outputVars === expectedSignature.outputVars)
@@ -96,7 +96,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodTypes_default")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualType = extractTypes(annotation)
-      val expectedType = Type(Array.empty)
+      val expectedType = Types(Array.empty)
 
       assert(actualType.types === expectedType.types)
 
@@ -105,7 +105,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodTypes_IntInt")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualType = extractTypes(annotation)
-      val expectedType = Type(Array("Int", "Int"))
+      val expectedType = Types(Array("Int", "Int"))
 
       assert(actualType.types === expectedType.types)
 
@@ -114,7 +114,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodTypes_ListIntListBoolean")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualType = extractTypes(annotation)
-      val expectedType = Type(Array("List[Int]","List[Boolean]"))
+      val expectedType = Types(Array("List[Int]","List[Boolean]"))
 
       assert(actualType.types === expectedType.types)
 
