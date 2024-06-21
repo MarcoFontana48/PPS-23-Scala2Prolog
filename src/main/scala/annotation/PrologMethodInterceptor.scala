@@ -21,9 +21,9 @@ class PrologMethodHandler(originalObject: Any) extends InvocationHandler with Lo
     if method.isAnnotationPresent(classOf[PrologMethod]) then
       logger.trace("method is annotated with @PrologMethod")
       val annotation = method.getAnnotation(classOf[PrologMethod])
-      logger.trace(s"\nextracted annotation method field values:\n\t'predicate=${annotation.predicate()}';\n\t'types=${annotation.types()}';\n\t'clauses=${annotation.clauses()}';\n\t'signature=${annotation.signature()}'")
+      logger.trace(s"\nextracted annotation method field values:\n\t'predicate=${annotation.predicate()}';\n\t'types=${annotation.types().mkString("Array(", ", ", ")")}';\n\t'clauses=${annotation.clauses().mkString("Array(", ", ", ")")}';\n\t'signature=${annotation.signature()}'")
     else {
-      logger.trace("method is not annotated with @PrologMethod")
+      logger.trace("method is not annotated with @PrologMethod, skipping annotation extraction...")
     }
 
     logger.trace(s"invoking the original method ${method.getName} on the original object $originalObject...")

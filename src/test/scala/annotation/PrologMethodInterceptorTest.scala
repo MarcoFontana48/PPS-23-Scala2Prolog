@@ -6,7 +6,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 trait TestPrologMethod {
-  @PrologMethod(predicate = "test_predicate", clauses = "test_clauses")
+  @PrologMethod(predicate = "test_predicate", types = Array("List<Int>", "List<Int>"), clauses = Array("test_clauses"))
   def test_annotated_method(a: Int): Int
 
   def test_not_annotated_method(a: Int): Int

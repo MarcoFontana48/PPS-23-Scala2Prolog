@@ -13,7 +13,7 @@ public @interface PrologMethod {
     
     String signature() default "";
     
-    String types() default "";
+    String[] types() default {};
     
-    String clauses() default "";
+    String[] clauses() default "";
 }
