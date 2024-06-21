@@ -1,29 +1,35 @@
 package pps.exam.application
 package annotation
 
-import org.apache.logging.log4j.scala.Logging
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
-trait TestPrologMethod {
-  @PrologMethod(predicate = "test_predicate", types = Array("List<Int>", "List<Int>"), clauses = Array("test_clauses"))
-  def test_annotated_method(a: Int): Int
+trait TestPrologMethod:
+  @PrologMethod(signature = "(X) -> {Y}")
+  def testMethodSignature_XY(): Unit
 
-  def test_not_annotated_method(a: Int): Int
-}
+  @PrologMethod(signature = "(  X1,   X2,X3 )   -> {Y1  , Y2}")
+  def testMethodSignature_XXY(): Unit
 
-class TestPrologClass extends Logging with TestPrologMethod {
-  def test_annotated_method(a: Int): Int =
-    logger.debug(s"arg: '$a'")
-    a
 
-  def test_not_annotated_method(a: Int): Int =
-    logger.debug(s"arg: '$a'")
-    a
-}
+class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
+  "PrologMethodUtils" should :
+    "extract the correct signature from a @PrologMethod if a single input and output variables are set" in :
+      val prologMethod = classOf[TestPrologMethod].getMethod("testMethodSignature_XY")
+      val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
+      val actualSignature = extractSignature(annotation)
+      val expectedSignature = PrologMethodSignature(Array("X"), Array("Y"))
 
-class PrologMethodInterceptorTest extends AnyWordSpec with Matchers {
-  val testPrologClass: TestPrologMethod = PrologMethodInterceptor.create(new TestPrologClass).asInstanceOf[TestPrologMethod]
-  testPrologClass.test_annotated_method(1)
-  testPrologClass.test_not_annotated_method(2)
-}
+      assert(actualSignature.inputVars === expectedSignature.inputVars)
+      assert(actualSignature.outputVars === expectedSignature.outputVars)
+
+  "PrologMethodUtils" should :
+    "extract the correct signature from a @PrologMethod if multiple input and output variables are set" in :
+      val prologMethod = classOf[TestPrologMethod].getMethod("testMethodSignature_XXY")
+      val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
+      val actualSignature = extractSignature(annotation)
+      val expectedSignature = PrologMethodSignature(Array("X1","X2","X3"), Array("Y1","Y2"))
+
+      assert(actualSignature.inputVars === expectedSignature.inputVars)
+      assert(actualSignature.outputVars === expectedSignature.outputVars)
+
+
