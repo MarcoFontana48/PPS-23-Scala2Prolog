@@ -2,16 +2,25 @@ package pps.exam.application
 package annotation
 
 import org.apache.logging.log4j.scala.Logging
+import alice.tuprolog.*
 
 import java.lang.reflect.{InvocationHandler, Method, Proxy}
 
 trait MethodInterceptor:
+  /**
+   * Creates a Proxy instance of the original object passed as argument that is returned to the caller.
+   * Each time the proxy instance is invoked, it will intercept the method call and execute its logic.
+   *
+   * @param originalObject the original object to create a new PrologMethodHandler for
+   * @tparam A the type of the original object
+   * @return a new Proxy instance that intercepts method calls and executes its logic.
+   */
   def create[A](originalObject: A): A
 
 trait PrologMethodUtils extends Logging:
 
-  def extractPermutations(prologMethod: PrologMethod): Permutations = Permutations(prologMethod.predicate())
-  
+  def extractPredicate(prologMethod: PrologMethod): Predicate = Predicate(prologMethod.predicate())
+
   def extractClauses(prologMethod: PrologMethod): Clauses = Clauses(prologMethod.clauses())
 
   def extractTypes(prologMethod: PrologMethod): Types =
@@ -21,7 +30,7 @@ trait PrologMethodUtils extends Logging:
         Types(Array.empty)
       case types =>
         logger.trace(s"extracted types from @PrologMethod annotation: '${types.mkString("Array(", ", ", ")")}'")
-        types.foreach{ e => if !e.matches("(Int|String|Boolean|List\\[\\s*(Int|String|Boolean)\\s*])") then throw new IllegalArgumentException(s"Invalid type: '$e'. Valid types are 'Int', 'String', 'Boolean', 'List[Int]', 'List[String]', 'List[Boolean]'") }
+        types.foreach { e => if !e.matches("(Int|Double|String|Boolean|List\\[\\s*(Int|Double|String|Boolean)\\s*])") then throw new IllegalArgumentException(s"Invalid type: '$e'. Valid types are 'Int', 'String', 'Boolean', 'List[Int]', 'List[String]', 'List[Boolean]'") }
         Types(types)
 
   def extractSignature(prologMethod: PrologMethod): Signatures =
@@ -38,14 +47,29 @@ trait PrologMethodUtils extends Logging:
 
         matchOption match
           case Some(m) =>
-            val input_vars = m.group(1).split(",").map(_.trim)
-            val output_vars = m.group(3).split(",").map(_.trim)
-            logger.trace(s"extracted input and output variables from signature: 'input=${input_vars.mkString("Array(", ", ", ")")}', 'output=${output_vars.mkString("Array(", ", ", ")")}'")
-            Signatures(input_vars, output_vars)
+            val inputVarsGroupIndex = 1
+            val outputVarsGroupIndex = 3
+            val inputVars = m.group(inputVarsGroupIndex).split(",").map(_.trim)
+            val outputVars = m.group(outputVarsGroupIndex).split(",").map(_.trim)
+            logger.trace(s"extracted input and output variables from signature: 'input=${inputVars.mkString("Array(", ", ", ")")}', 'output=${outputVars.mkString("Array(", ", ", ")")}'")
+            Signatures(inputVars, outputVars)
           case None =>
             throw new IllegalArgumentException(s"Signature '$signature' is not formatted correctly")
 
+/**
+ * Module that contains methods to intercept call of methods annotated with @PrologMethod an execute their logic
+ */
 object PrologMethodInterceptor extends Logging with MethodInterceptor:
+  /**
+   * Creates a Proxy instance of the original object passed as argument that is returned to the caller.
+   * Each time the proxy instance is invoked, it will intercept the method call and execute the annotated @PrologMethod
+   * logic using the tuProlog engine, returning its result as the method result.
+   * The body of the original method is ignored and the Prolog logic is executed instead.
+   *
+   * @param originalObject the original object to create a new PrologMethodHandler for
+   * @tparam A the type of the original object
+   * @return a new Proxy instance of the object passed as argument to this method
+   */
   override def create[A](originalObject: A): A =
     logger.trace(s"creating a new PrologMethodHandler for the original object '$originalObject'...")
     val handler = PrologMethodHandler(originalObject)
@@ -58,8 +82,16 @@ class PrologMethodHandler(originalObject: Any) extends PrologMethodUtils with In
     if method.isAnnotationPresent(classOf[PrologMethod]) then
       logger.trace("method is annotated with @PrologMethod")
       val annotation = method.getAnnotation(classOf[PrologMethod])
-      val signatureValues = extractSignature(annotation)
-      logger.trace(s"extracted signature values: '${signatureValues.inputVars.mkString("Array(", ", ", ")")}'->'${signatureValues.outputVars.mkString("Array(", ", ", ")")}'")
+      val signatures = extractSignature(annotation)
+      val predicate = extractPredicate(annotation)
+      val clauses = extractClauses(annotation)
+      val types = extractTypes(annotation)
+      logger.trace("extracted @PrologMethod fields:" +
+        s"\nextracted signatures: '${signatures.inputVars.mkString("Array(", ", ", ")")}'->'${signatures.outputVars.mkString("Array(", ", ", ")")}'" +
+        s"\nextracted permutation: '${predicate.predicate}'" +
+        s"\nextracted types: '${types.types.mkString("Array(", ", ", ")")}'" +
+        s"\nextracted clauses: '${clauses.clauses.mkString("Array(", ", ", ")")}'"
+      )
     else {
       logger.trace("method is not annotated with @PrologMethod, skipping annotation extraction...")
     }

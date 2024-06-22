@@ -25,10 +25,10 @@ trait TestPrologMethod:
   @PrologMethod()
   def testMethodTypes_default(): Unit
 
-  @PrologMethod(types = Array("Int","Int"))
+  @PrologMethod(types = Array("Int", "Int"))
   def testMethodTypes_IntInt(): Unit
 
-  @PrologMethod(types = Array("List[Int]","List[Boolean]"))
+  @PrologMethod(types = Array("List[Int]", "List[Boolean]"))
   def testMethodTypes_ListIntListBoolean(): Unit
 
   @PrologMethod(types = Array("List[List[Int]]"))
@@ -36,6 +36,34 @@ trait TestPrologMethod:
 
   @PrologMethod(types = Array("Unit"))
   def testMethodTypes_Unit(): Unit
+
+  @PrologMethod(predicate = "p(X).", clauses = Array("p(a)."))
+  def testMethodPredicateClauses(): Unit
+
+class TestPrologMethodImpl extends TestPrologMethod:
+  def testMethodSignature_default(): Unit = ()
+
+  def testMethodSignature_XY(): Unit = ()
+
+  def testMethodSignature_XXXYY(): Unit = ()
+
+  def testMethodSignature_incorrectFormatBrackets(): Unit = ()
+
+  def testMethodSignature_incorrectFormatArrow(): Unit = ()
+
+  def testMethodSignature_incorrectFormatVars(): Unit = ()
+
+  def testMethodTypes_default(): Unit = ()
+
+  def testMethodTypes_IntInt(): Unit = ()
+
+  def testMethodTypes_ListIntListBoolean(): Unit = ()
+
+  def testMethodTypes_ListListInt(): Unit = ()
+
+  def testMethodTypes_Unit(): Unit = ()
+
+  def testMethodPredicateClauses(): Unit = ()
 
 class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
 
@@ -114,7 +142,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodTypes_ListIntListBoolean")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualType = extractTypes(annotation)
-      val expectedType = Types(Array("List[Int]","List[Boolean]"))
+      val expectedType = Types(Array("List[Int]", "List[Boolean]"))
 
       assert(actualType.types === expectedType.types)
 

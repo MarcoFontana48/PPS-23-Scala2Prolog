@@ -9,4 +9,4 @@ case class Types(types: Array[String]) extends PrologMethodEntity
 
 case class Clauses(clauses: Array[String]) extends PrologMethodEntity
 
-case class Permutations(permutations: String) extends PrologMethodEntity
+case class Predicate(predicate: String) extends PrologMethodEntity
