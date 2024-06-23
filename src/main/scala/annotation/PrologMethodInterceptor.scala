@@ -6,6 +6,7 @@ import alice.tuprolog.exceptions.InvalidTermException
 import org.apache.logging.log4j.scala.Logging
 
 import java.lang.reflect.{InvocationHandler, Method, Proxy}
+import scala.util.{Failure, Success}
 
 /**
  * Trait to mixin to give the extended class the property to create a Proxy of an object
@@ -52,28 +53,13 @@ class PrologMethodHandler(originalObject: Any) extends InvocationHandler with Lo
   override def invoke(proxy: Any, method: Method, args: Array[AnyRef]): AnyRef =
     logger.debug(s"invoking method '${method.getName}' on proxy of original object '$originalObject'...")
     if method.isAnnotationPresent(classOf[PrologMethod]) then
-      logger.trace("method is annotated with @PrologMethod")
+      logger.trace("method is annotated with @PrologMethod, executing Prolog logic...")
       val annotation = method.getAnnotation(classOf[PrologMethod])
-      import PrologMethodUtils.extractMethodFields
+      import PrologMethodUtils.*
       val fields = extractMethodFields(annotation)
-      val engine = Prolog()
-      val predicateString = fields("predicate").asInstanceOf[Predicate].formatPredicate() //TODO: format args and pass them as input to getFormattedPredicate method, they have to replace the "+" variables in the predicate
-      val signatureString = fields("signatures").asInstanceOf[Signatures].inputVars.mkString(", ")
-      val typesString = fields("types").asInstanceOf[Types].types.mkString(" ")
-      val clausesString = fields("clauses").asInstanceOf[Clauses].clauses.mkString(" ")
-      logger.trace(s"pred, sign, types, clauses: '" + predicateString + "', '" + signatureString + "', '" + typesString + "', '" + clausesString + "'...")
-      logger.trace(s"setting theory to the Prolog engine with clauses: '$clausesString'...")
-      engine.setTheory(Theory(clausesString))
-      logger.trace(s"querying the Prolog engine with predicate: '$predicateString'...")
-      val solveInfo = engine.solve(predicateString)
-      logger.trace(s"query completed with solveInfo result:\n$solveInfo")
-      val solutionString = solveInfo.getSolution.toString
-      logger.trace(s"returning result '$solutionString'...")
-      solutionString
-    else {
-      logger.trace("method is not annotated with @PrologMethod, skipping annotation extraction and invoking original method instead...")
-      logger.trace(s"invoking the original method ${method.getName} on the original object $originalObject...")
-      val result = method.invoke(originalObject, args: _*)
-      logger.trace(s"method invocation completed with result '$result', returning the result...")
-      result
-    }
+      val predicate = fields("predicate").asInstanceOf[Predicate]
+      val clauses = fields("clauses").asInstanceOf[Clauses]
+      val terms = Scala2Prolog.setTheoryAndSolveGoal(predicate, clauses)
+      terms
+    else
+      method.invoke(originalObject, args: _*)

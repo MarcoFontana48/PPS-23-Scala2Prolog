@@ -1,7 +1,7 @@
 package pps.exam.application
 package annotation
 
-import alice.tuprolog.exceptions.InvalidTermException
+import alice.tuprolog.Term
 import org.scalatest.matchers.should.Matchers
 
 import java.lang.reflect.UndeclaredThrowableException
@@ -50,14 +50,16 @@ trait TestPrologMethod:
   def testMethodPredicate_IO(): Unit
 
   @PrologMethod(predicate = "p(X).", clauses = Array("p(a)."))
-  def testMethodPredicateClauses_Xa(): String
+  def testMethodPredicateClauses_Xa(): LazyList[Term]
 
   @PrologMethod(predicate = "p(+X).", clauses = Array("p(a)."))
-  def testMethodPredicateClauses_plusXa(): String
+  def testMethodPredicateClauses_plusXa(): LazyList[Term]
 
   @PrologMethod(predicate = "p(-X).", clauses = Array("p(a)."))
-  @throws[InvalidTermException]("if the Prolog engine cannot parse the Prolog theory or query")
-  def testMethodPredicateClauses_minusXa(): String
+  def testMethodPredicateClauses_minusXa(): LazyList[Term]
+
+  @PrologMethod(predicate = "p(-X).", clauses = Array("p(a). p(b). p(c)."))
+  def testMethodPredicateClauses_minusXabc(): LazyList[Term]
 
 class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodSignature_default(): Unit = ()
@@ -88,11 +90,13 @@ class TestPrologMethodImpl extends TestPrologMethod:
 
   def testMethodPredicate_IO(): Unit = ()
 
-  def testMethodPredicateClauses_Xa(): String = ""
+  def testMethodPredicateClauses_Xa(): LazyList[Term] = null
 
-  def testMethodPredicateClauses_plusXa(): String = ""
+  def testMethodPredicateClauses_plusXa(): LazyList[Term] = null
 
-  def testMethodPredicateClauses_minusXa(): String = ""
+  def testMethodPredicateClauses_minusXa(): LazyList[Term] = null
+
+  def testMethodPredicateClauses_minusXabc(): LazyList[Term] = null
 
 class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
 
@@ -157,7 +161,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val actualType = extractTypes(annotation)
       val expectedType = Types(Array.empty)
 
-      assert(actualType.types === expectedType.types)
+      assert(actualType.values === expectedType.values)
 
   "PrologMethodUtils" should :
     "extract the correct type from a @PrologMethod if a single type is set" in :
@@ -166,7 +170,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val actualType = extractTypes(annotation)
       val expectedType = Types(Array("Int", "Int"))
 
-      assert(actualType.types === expectedType.types)
+      assert(actualType.values === expectedType.values)
 
   "PrologMethodUtils" should :
     "extract the correct type from a @PrologMethod if a list type is set" in :
@@ -175,7 +179,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val actualType = extractTypes(annotation)
       val expectedType = Types(Array("List[Int]", "List[Boolean]"))
 
-      assert(actualType.types === expectedType.types)
+      assert(actualType.values === expectedType.values)
 
   "PrologMethodUtils" should :
     "throw an IllegalArgumentException when trying to extract the type from a @PrologMethod if non valid type (List[List[...]]) is set" in :
@@ -199,7 +203,7 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val expectedPredicate = Predicate("", Map.empty)
 
       assert(actualPredicate.name === expectedPredicate.name)
-      assert(actualPredicate.variables === expectedPredicate.variables)
+      assert(actualPredicate.values === expectedPredicate.values)
 
   "PrologMethodUtils" should :
     "extract the correct predicate from a @PrologMethod if no predicate notation symbols are present" in :
@@ -209,8 +213,8 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val expectedPredicate = Predicate("p", Map("+" -> Array("X1", "X2"), "-" -> Array("Y")))
 
       assert(actualPredicate.name === expectedPredicate.name)
-      assert(actualPredicate.variables("+") === expectedPredicate.variables("+"))
-      assert(actualPredicate.variables("-") === expectedPredicate.variables("-"))
+      assert(actualPredicate.values("+") === expectedPredicate.values("+"))
+      assert(actualPredicate.values("-") === expectedPredicate.values("-"))
 
   "PrologMethodUtils" should :
     "extract the correct predicate from a @PrologMethod if predicate notation symbols are present" in :
@@ -220,21 +224,25 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val expectedPredicate = Predicate("p", Map("+" -> Array("X1", "X2"), "-" -> Array("Y")))
 
       assert(actualPredicate.name === expectedPredicate.name)
-      assert(actualPredicate.variables("+") === expectedPredicate.variables("+"))
-      assert(actualPredicate.variables("-") === expectedPredicate.variables("-"))
+      assert(actualPredicate.values("+") === expectedPredicate.values("+"))
+      assert(actualPredicate.values("-") === expectedPredicate.values("-"))
 
   "PrologMethodUtils" should :
     "evaluate correctly the prolog goal 'p(X).' against theory 'p(a).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      proxy.testMethodPredicateClauses_Xa() shouldBe "p(a)"
+      assert(proxy.testMethodPredicateClauses_Xa() === LazyList(Term.createTerm("p(a)")))
 
   "PrologMethodUtils" should :
     "evaluate correctly the prolog goal 'p(-X).' against theory 'p(a).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      proxy.testMethodPredicateClauses_minusXa() shouldBe "p(a)"
+      assert(proxy.testMethodPredicateClauses_minusXa() === LazyList(Term.createTerm("p(a)")))
 
   "PrologMethodUtils" should :
     "throw an UndeclaredThrowableException when trying to solve the goal 'p(+X).' against theory 'p(a).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      //alice.tuprolog.exceptions.InvalidTermException
       assertThrows[UndeclaredThrowableException](proxy.testMethodPredicateClauses_plusXa())
+
+  "PrologMethodUtils" should :
+    "evaluate correctly the prolog goal 'p(-X).' against theory 'p(a). p(b). p(c).'" in :
+      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
+      assert(proxy.testMethodPredicateClauses_minusXabc() === LazyList(Term.createTerm("p(a)"), Term.createTerm("p(b)"), Term.createTerm("p(c)")))

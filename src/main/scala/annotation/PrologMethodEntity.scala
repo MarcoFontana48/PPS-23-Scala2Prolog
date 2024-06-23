@@ -5,14 +5,14 @@ trait PrologMethodEntity
 
 case class Signatures(inputVars: Array[String], outputVars: Array[String]) extends PrologMethodEntity
 
-case class Types(types: Array[String]) extends PrologMethodEntity
+case class Types(values: Array[String]) extends PrologMethodEntity
 
-case class Clauses(clauses: Array[String]) extends PrologMethodEntity
+case class Clauses(values: Array[String]) extends PrologMethodEntity
 
-case class Predicate(name: String, variables: Map[String,Array[String]]) extends PrologMethodEntity:
+case class Predicate(name: String, values: Map[String,Array[String]]) extends PrologMethodEntity:
   def formatPredicate(inputValues: String*): String = inputValues match
-    case values if values.nonEmpty => values.length match
-        case valuesLength if valuesLength == variables("+").length => name + "(" + values.mkString(", ") + ", " + variables("-").mkString(", ") + ")."
+    case inputValues if inputValues.nonEmpty => inputValues.length match
+        case inputValuesLength if inputValuesLength == values("+").length => name + "(" + inputValues.mkString(", ") + ", " + values("-").mkString(", ") + ")."
         case _ => throw new IllegalArgumentException("Invalid number of input values")
-    case _ => name + "(" + variables("-").mkString(", ") + ")."
+    case _ => name + "(" + values("-").mkString(", ") + ")."
 
