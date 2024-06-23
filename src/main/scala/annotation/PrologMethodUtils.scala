@@ -54,25 +54,26 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
         logger.trace(s"extracted predicate from @PrologMethod annotation: '$predicate', parsing its content...")
         val variables = predicate.split("[()]")(1).split(",").map(_.trim)
 
-        // pattern matching anonymous function to add the predicate notation symbols '+' and '-' to the variables
-        val addPredicateNotationSymbolsFunction: ((String, Int)) => String =
+        // implicit declaration of pattern matching anonymous function "(String, Int) => String" (passed as argument to
+        // higher order function .map method) to extract the input and output prolog variables from the predicate
+        val modifiedVariables = variables.zipWithIndex.map {
           case (variable, index) if variable.startsWith("+") || variable.startsWith("-") => variable
           case (variable, index) if index != variables.length - 1 => "+" + variable
           case (variable, _) => "-" + variable
+        }
 
-        // pattern matching anonymous function to extract the input '+' and output '-' variables from the predicate
-        val extractPredicateNotationSymbolVariables: ((Array[String], Array[String]), String) => (Array[String], Array[String]) =
-          case ((input, output), variable) => variable(0) match
-            case '+' => (input :+ variable.substring(1), output)
-            case '-' => (input, output :+ variable.substring(1))
-            case _ => (input, output)
+        // implicit declaration of pattern matching anonymous function "(Array[String], Array[String]) => (Array[String], Array[String])"
+        // (passed as argument to higher order curry function .foldLeft) to extract the input and output prolog
+        // variables from the predicate, explicitly using it's curry
+        val arrayInit = (Array.empty[String], Array.empty[String])
+        val foldLeftCurry = modifiedVariables.foldLeft(arrayInit)
+        val (inputVars, outputVars) = foldLeftCurry {
+          case ((input, output), variable) if variable.startsWith("+") => (input :+ variable.substring(1), output)
+          case ((input, output), variable) if variable.startsWith("-") => (input, output :+ variable.substring(1))
+        }
 
-        val modifiedVariables = variables.zipWithIndex.map(addPredicateNotationSymbolsFunction)
-
-        val foldLeftCurry = modifiedVariables.foldLeft(Array.empty[String], Array.empty[String])
-        val (inputVars, outputVars) = foldLeftCurry(extractPredicateNotationSymbolVariables)
-        logger.trace(s" - extracted variables with predicate notation symbol '+': ${inputVars.mkString("Array(", ", ", ")")}")
-        logger.trace(s" - extracted variables with predicate notation symbol '-': ${outputVars.mkString("Array(", ", ", ")")}")
+        logger.trace(s"extracted variables with predicate notation symbol '+': ${inputVars.mkString("Array(", ", ", ")")}")
+        logger.trace(s"extracted variables with predicate notation symbol '-': ${outputVars.mkString("Array(", ", ", ")")}")
         Predicate(inputVars, outputVars)
 
   /**
@@ -126,4 +127,4 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
             logger.trace(s"extracted input and output variables from signature: 'input=${inputVars.mkString("Array(", ", ", ")")}', 'output=${outputVars.mkString("Array(", ", ", ")")}'")
             Signatures(inputVars, outputVars)
           case None =>
-            throw new IllegalArgumentException(s"Signature '$signature' is not formatted correctly")
+            throw new IllegalArgumentException(s"Invalid signature format: '$signature'. Signature must be formatted as '(X1,X2,..Xn) -> {Y1,Y2,..Yn}'")
