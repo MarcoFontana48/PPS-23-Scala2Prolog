@@ -66,6 +66,7 @@ class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodPredicateClauses(): Unit = ()
 
 class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
+  import PrologMethodUtils.*
 
   /* @PrologMethod method field 'signature' tests */
 
@@ -157,5 +158,3 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodTypes_Unit")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       assertThrows[IllegalArgumentException](extractTypes(annotation))
-
-
