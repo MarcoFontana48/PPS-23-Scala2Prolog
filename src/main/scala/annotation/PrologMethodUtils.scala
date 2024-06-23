@@ -18,7 +18,7 @@ abstract class AnnotationUtils[A, +B]:
    */
   def extractMethodFields(annotation: A): B
 
-private type PrologMethodFields = Map[String, PrologMethodEntity]
+type PrologMethodFields = Map[String, PrologMethodEntity]
 
 /**
  * Utility object to extract and parse the fields of @PrologMethod annotations.

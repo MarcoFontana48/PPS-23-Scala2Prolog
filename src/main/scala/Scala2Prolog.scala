@@ -2,8 +2,9 @@ package pps.exam.application
 
 import alice.tuprolog.{Prolog, SolveInfo, Term, Theory}
 import org.apache.logging.log4j.scala.Logging
-import pps.exam.application.annotation.{Clauses, Predicate}
-import scala.util.{Try, Success, Failure}
+import pps.exam.application.annotation.{Clauses, Predicate, PrologMethodFields}
+
+import scala.util.{Failure, Success, Try}
 
 /**
  * This object provides a method to set a theory and solve a goal in Prolog.
@@ -12,14 +13,13 @@ object Scala2Prolog extends Logging {
   /**
    * Sets a theory and solves a goal in Prolog.
    *
-   * @param predicate the predicate to solve
-   * @param clauses the clauses to set as theory
+   * @param fields a map containing the extracted values of method fields of the @PrologMethod annotation.
    * @return a LazyList that is computed only when needed, containing the result of the goal
    */
-  def setTheoryAndSolveGoal(predicate: Predicate, clauses: Clauses): LazyList[Term] = {
+  def setTheoryAndSolveGoal(fields: PrologMethodFields, args: AnyRef): LazyList[Term] = {
     val engine = Prolog()
-    val rules = clauses.values.mkString(" ")
-    val goal = predicate.formatPredicate()  //TODO
+    val rules = fields("clauses").asInstanceOf[Clauses].values.mkString(" ")
+    val goal = fields("predicate").asInstanceOf[Predicate].generateGoal() //TODO pass args of the annotated method
     logger.trace(s"Setting theory: $rules")
     engine.setTheory(Theory(rules))
     logger.trace(s"Solving goal: $goal")

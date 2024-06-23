@@ -1,12 +1,9 @@
 package pps.exam.application
 package annotation
 
-import alice.tuprolog.*
-import alice.tuprolog.exceptions.InvalidTermException
 import org.apache.logging.log4j.scala.Logging
 
 import java.lang.reflect.{InvocationHandler, Method, Proxy}
-import scala.util.{Failure, Success}
 
 /**
  * Trait to mixin to give the extended class the property to create a Proxy of an object
@@ -54,12 +51,9 @@ class PrologMethodHandler(originalObject: Any) extends InvocationHandler with Lo
     logger.debug(s"invoking method '${method.getName}' on proxy of original object '$originalObject'...")
     if method.isAnnotationPresent(classOf[PrologMethod]) then
       logger.trace("method is annotated with @PrologMethod, executing Prolog logic...")
-      val annotation = method.getAnnotation(classOf[PrologMethod])
-      import PrologMethodUtils.*
-      val fields = extractMethodFields(annotation)
-      val predicate = fields("predicate").asInstanceOf[Predicate]
-      val clauses = fields("clauses").asInstanceOf[Clauses]
-      val terms = Scala2Prolog.setTheoryAndSolveGoal(predicate, clauses)
-      terms
+      val prologMethodAnnotation = method.getAnnotation(classOf[PrologMethod])
+      val fields = PrologMethodUtils.extractMethodFields(prologMethodAnnotation)
+      Scala2Prolog.setTheoryAndSolveGoal(fields, args)
     else
+      logger.trace("method is not annotated with @PrologMethod, invoking the default method on the real object...")
       method.invoke(originalObject, args: _*)
