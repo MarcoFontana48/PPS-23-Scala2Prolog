@@ -1,7 +1,10 @@
 package pps.exam.application
 package annotation
 
+import alice.tuprolog.exceptions.InvalidTermException
 import org.scalatest.matchers.should.Matchers
+
+import java.lang.reflect.UndeclaredThrowableException
 
 trait TestPrologMethod:
   @PrologMethod()
@@ -52,6 +55,10 @@ trait TestPrologMethod:
   @PrologMethod(predicate = "p(+X).", clauses = Array("p(a)."))
   def testMethodPredicateClauses_plusXa(): String
 
+  @PrologMethod(predicate = "p(-X).", clauses = Array("p(a)."))
+  @throws[InvalidTermException]("if the Prolog engine cannot parse the Prolog theory or query")
+  def testMethodPredicateClauses_minusXa(): String
+
 class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodSignature_default(): Unit = ()
 
@@ -84,6 +91,8 @@ class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodPredicateClauses_Xa(): String = ""
 
   def testMethodPredicateClauses_plusXa(): String = ""
+
+  def testMethodPredicateClauses_minusXa(): String = ""
 
 class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
 
@@ -220,6 +229,12 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       proxy.testMethodPredicateClauses_Xa() shouldBe "p(a)"
 
   "PrologMethodUtils" should :
-    "evaluate correctly the prolog goal 'p(+X).' against theory 'p(a).'" in :
+    "evaluate correctly the prolog goal 'p(-X).' against theory 'p(a).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      proxy.testMethodPredicateClauses_Xa() shouldBe "p(a)"
+      proxy.testMethodPredicateClauses_minusXa() shouldBe "p(a)"
+
+  "PrologMethodUtils" should :
+    "throw an UndeclaredThrowableException when trying to solve the goal 'p(+X).' against theory 'p(a).'" in :
+      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
+      //alice.tuprolog.exceptions.InvalidTermException
+      assertThrows[UndeclaredThrowableException](proxy.testMethodPredicateClauses_plusXa())

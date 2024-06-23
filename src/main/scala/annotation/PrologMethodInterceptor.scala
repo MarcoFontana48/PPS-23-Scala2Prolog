@@ -2,6 +2,7 @@ package pps.exam.application
 package annotation
 
 import alice.tuprolog.*
+import alice.tuprolog.exceptions.InvalidTermException
 import org.apache.logging.log4j.scala.Logging
 
 import java.lang.reflect.{InvocationHandler, Method, Proxy}
@@ -56,8 +57,11 @@ class PrologMethodHandler(originalObject: Any) extends InvocationHandler with Lo
       import PrologMethodUtils.extractMethodFields
       val fields = extractMethodFields(annotation)
       val engine = Prolog()
+      val predicateString = fields("predicate").asInstanceOf[Predicate].formatPredicate() //TODO: format args and pass them as input to getFormattedPredicate method, they have to replace the "+" variables in the predicate
+      val signatureString = fields("signatures").asInstanceOf[Signatures].inputVars.mkString(", ")
+      val typesString = fields("types").asInstanceOf[Types].types.mkString(" ")
       val clausesString = fields("clauses").asInstanceOf[Clauses].clauses.mkString(" ")
-      val predicateString = fields("predicate").asInstanceOf[Predicate].getFormattedPredicate
+      logger.trace(s"pred, sign, types, clauses: '" + predicateString + "', '" + signatureString + "', '" + typesString + "', '" + clausesString + "'...")
       logger.trace(s"setting theory to the Prolog engine with clauses: '$clausesString'...")
       engine.setTheory(Theory(clausesString))
       logger.trace(s"querying the Prolog engine with predicate: '$predicateString'...")
