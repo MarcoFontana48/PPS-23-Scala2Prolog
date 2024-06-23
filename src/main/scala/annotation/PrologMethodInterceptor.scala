@@ -1,6 +1,7 @@
 package pps.exam.application
 package annotation
 
+import alice.tuprolog.*
 import org.apache.logging.log4j.scala.Logging
 
 import java.lang.reflect.{InvocationHandler, Method, Proxy}
@@ -53,16 +54,22 @@ class PrologMethodHandler(originalObject: Any) extends InvocationHandler with Lo
       logger.trace("method is annotated with @PrologMethod")
       val annotation = method.getAnnotation(classOf[PrologMethod])
       import PrologMethodUtils.extractMethodFields
-      extractMethodFields(annotation) match
-        case fields if fields.isEmpty =>
-          logger.trace("no fields extracted from @PrologMethod annotation, skipping annotation extraction...")
-        case fields =>
-          logger.trace(s"extracted fields from @PrologMethod annotation: '${fields.mkString(", ")}'")
+      val fields = extractMethodFields(annotation)
+      val engine = Prolog()
+      val clausesString = fields("clauses").asInstanceOf[Clauses].clauses.mkString(" ")
+      val predicateString = fields("predicate").asInstanceOf[Predicate].getFormattedPredicate
+      logger.trace(s"setting theory to the Prolog engine with clauses: '$clausesString'...")
+      engine.setTheory(Theory(clausesString))
+      logger.trace(s"querying the Prolog engine with predicate: '$predicateString'...")
+      val solveInfo = engine.solve(predicateString)
+      logger.trace(s"query completed with solveInfo result:\n$solveInfo")
+      val solutionString = solveInfo.getSolution.toString
+      logger.trace(s"returning result '$solutionString'...")
+      solutionString
     else {
-      logger.trace("method is not annotated with @PrologMethod, skipping annotation extraction...")
+      logger.trace("method is not annotated with @PrologMethod, skipping annotation extraction and invoking original method instead...")
+      logger.trace(s"invoking the original method ${method.getName} on the original object $originalObject...")
+      val result = method.invoke(originalObject, args: _*)
+      logger.trace(s"method invocation completed with result '$result', returning the result...")
+      result
     }
-
-    logger.trace(s"invoking the original method ${method.getName} on the original object $originalObject...")
-    val result = method.invoke(originalObject, args: _*)
-    logger.trace(s"method invocation completed with result '$result', returning the result...")
-    result

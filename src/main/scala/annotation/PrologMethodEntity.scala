@@ -9,4 +9,5 @@ case class Types(types: Array[String]) extends PrologMethodEntity
 
 case class Clauses(clauses: Array[String]) extends PrologMethodEntity
 
-case class Predicate(inputVariables: Array[String], outputVariables: Array[String]) extends PrologMethodEntity
+case class Predicate(name: String, variables: Map[String,Array[String]]) extends PrologMethodEntity:
+  def getFormattedPredicate: String = name + "(" + variables("+").mkString(", ") + variables("-").mkString(", ") + ")."

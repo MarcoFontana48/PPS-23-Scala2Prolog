@@ -46,6 +46,12 @@ trait TestPrologMethod:
   @PrologMethod(predicate = "p(+X1, +X2, -Y).")
   def testMethodPredicate_IO(): Unit
 
+  @PrologMethod(predicate = "p(X).", clauses = Array("p(a)."))
+  def testMethodPredicateClauses_Xa(): String
+
+  @PrologMethod(predicate = "p(+X).", clauses = Array("p(a)."))
+  def testMethodPredicateClauses_plusXa(): String
+
 class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodSignature_default(): Unit = ()
 
@@ -75,7 +81,12 @@ class TestPrologMethodImpl extends TestPrologMethod:
 
   def testMethodPredicate_IO(): Unit = ()
 
+  def testMethodPredicateClauses_Xa(): String = ""
+
+  def testMethodPredicateClauses_plusXa(): String = ""
+
 class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
+
   import PrologMethodUtils.*
 
   /* @PrologMethod method field 'signature' tests */
@@ -176,27 +187,39 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodPredicate_default")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualPredicate = extractPredicate(annotation)
-      val expectedPredicate = Predicate(Array.empty, Array.empty)
+      val expectedPredicate = Predicate("", Map.empty)
 
-      assert(actualPredicate.inputVariables === expectedPredicate.inputVariables)
-      assert(actualPredicate.outputVariables === expectedPredicate.outputVariables)
+      assert(actualPredicate.name === expectedPredicate.name)
+      assert(actualPredicate.variables === expectedPredicate.variables)
 
-  "PrologMethodUtils" should:
-    "extract the correct predicate from a @PrologMethod if no predicate notation symbols are present" in:
+  "PrologMethodUtils" should :
+    "extract the correct predicate from a @PrologMethod if no predicate notation symbols are present" in :
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodPredicate_noSymbols")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualPredicate = extractPredicate(annotation)
-      val expectedPredicate = Predicate(Array("X1", "X2"), Array("Y"))
+      val expectedPredicate = Predicate("p", Map("+" -> Array("X1", "X2"), "-" -> Array("Y")))
 
-      assert(actualPredicate.inputVariables === expectedPredicate.inputVariables)
-      assert(actualPredicate.outputVariables === expectedPredicate.outputVariables)
+      assert(actualPredicate.name === expectedPredicate.name)
+      assert(actualPredicate.variables("+") === expectedPredicate.variables("+"))
+      assert(actualPredicate.variables("-") === expectedPredicate.variables("-"))
 
-  "PrologMethodUtils" should:
-    "extract the correct predicate from a @PrologMethod if predicate notation symbols are present" in:
+  "PrologMethodUtils" should :
+    "extract the correct predicate from a @PrologMethod if predicate notation symbols are present" in :
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodPredicate_IO")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualPredicate = extractPredicate(annotation)
-      val expectedPredicate = Predicate(Array("X1", "X2"), Array("Y"))
+      val expectedPredicate = Predicate("p", Map("+" -> Array("X1", "X2"), "-" -> Array("Y")))
 
-      assert(actualPredicate.inputVariables === expectedPredicate.inputVariables)
-      assert(actualPredicate.outputVariables === expectedPredicate.outputVariables)
+      assert(actualPredicate.name === expectedPredicate.name)
+      assert(actualPredicate.variables("+") === expectedPredicate.variables("+"))
+      assert(actualPredicate.variables("-") === expectedPredicate.variables("-"))
+
+  "PrologMethodUtils" should :
+    "evaluate correctly the prolog goal 'p(X).' against theory 'p(a).'" in :
+      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
+      proxy.testMethodPredicateClauses_Xa() shouldBe "p(a)"
+
+  "PrologMethodUtils" should :
+    "evaluate correctly the prolog goal 'p(+X).' against theory 'p(a).'" in :
+      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
+      proxy.testMethodPredicateClauses_Xa() shouldBe "p(a)"

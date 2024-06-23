@@ -49,16 +49,18 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
     prologMethod.predicate() match
       case predicate if predicate.isEmpty =>
         logger.trace("predicate is empty, returning default predicate")
-        Predicate(Array.empty, Array.empty)
+        Predicate("", Map.empty)
       case predicate =>
         logger.trace(s"extracted predicate from @PrologMethod annotation: '$predicate', parsing its content...")
-        val variables = predicate.split("[()]")(1).split(",").map(_.trim)
+        val splitPredicateResult = predicate.split("[()]")
+        val predicateName = splitPredicateResult(0).trim
+        val predicateArguments = splitPredicateResult(1).split(",").map(_.trim)
 
         // implicit declaration of pattern matching anonymous function "(String, Int) => String" (passed as argument to
         // higher order function .map method) to extract the input and output prolog variables from the predicate
-        val modifiedVariables = variables.zipWithIndex.map {
+        val modifiedVariables = predicateArguments.zipWithIndex.map {
           case (variable, index) if variable.startsWith("+") || variable.startsWith("-") => variable
-          case (variable, index) if index != variables.length - 1 => "+" + variable
+          case (variable, index) if index != predicateArguments.length - 1 => "+" + variable
           case (variable, _) => "-" + variable
         }
 
@@ -74,7 +76,13 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
 
         logger.trace(s"extracted variables with predicate notation symbol '+': ${inputVars.mkString("Array(", ", ", ")")}")
         logger.trace(s"extracted variables with predicate notation symbol '-': ${outputVars.mkString("Array(", ", ", ")")}")
-        Predicate(inputVars, outputVars)
+
+        val predicateVarsMap = Map(
+          "+" -> inputVars,
+          "-" -> outputVars
+        )
+        
+        Predicate(predicateName, predicateVarsMap)
 
   /**
    * Method to extract and parse the 'clauses' method field of @PrologMethod annotations.
@@ -82,7 +90,14 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
    * @param prologMethod a @PrologMethod annotation.
    * @return a 'Clauses' that contains the informations about the clauses method field
    */
-  def extractClauses(prologMethod: PrologMethod): Clauses = Clauses(prologMethod.clauses())
+  def extractClauses(prologMethod: PrologMethod): Clauses =
+    prologMethod.clauses() match
+      case clauses if clauses.isEmpty =>
+        logger.trace("clauses is empty, returning default clauses...")
+        Clauses(Array.empty)
+      case clauses =>
+        logger.trace(s"extracted clauses from @PrologMethod annotation: '${clauses.mkString("Array(", ", ", ")")}'")
+        Clauses(clauses)
 
   /**
    * Method to extract and parse the 'types' method field of @PrologMethod annotations.
