@@ -19,10 +19,12 @@ abstract class AnnotationUtils[A, +B]:
   def extractMethodFields(annotation: A): B
 
 private type PrologMethodFields = Map[String, PrologMethodEntity]
+
 /**
  * Utility object to extract and parse the fields of @PrologMethod annotations.
  */
 object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodFields] with Logging:
+
   /**
    * Method to extract and parse the fields of @PrologMethod annotations.
    *
@@ -50,33 +52,28 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
         Predicate(Array.empty, Array.empty)
       case predicate =>
         logger.trace(s"extracted predicate from @PrologMethod annotation: '$predicate', parsing its content...")
-        val variables = extractPrologPredicateNotationVariables(predicate)
-        logger.trace(s" - extracted variables with predicate notation symbol '+': ${variables("+").mkString("Array(", ", ", ")")}")
-        logger.trace(s" - extracted variables with predicate notation symbol '-': ${variables("-").mkString("Array(", ", ", ")")}")
-        Predicate(variables("+"), variables("-"))
+        val variables = predicate.split("[()]")(1).split(",").map(_.trim)
 
-  private type PrologPredicateNotationVariables = Map[String, Array[String]] // + -> [X1,X2,...,XN], - -> [Y1,Y2,...,YN], ...
-  /**
-   * Method to extract the variables from a predicate notation string.
-   *
-   * @param predicate a predicate notation string.
-   * @return a Map that contains the extracted variables with their notation symbol
-   */
-  private def extractPrologPredicateNotationVariables(predicate: String): PrologPredicateNotationVariables = {
-      val pattern = "([+-])(\\w+)".r
-      val matches = pattern.findAllIn(predicate).matchData.toArray
+        // pattern matching anonymous function to add the predicate notation symbols '+' and '-' to the variables
+        val addPredicateNotationSymbolsFunction: ((String, Int)) => String =
+          case (variable, index) if variable.startsWith("+") || variable.startsWith("-") => variable
+          case (variable, index) if index != variables.length - 1 => "+" + variable
+          case (variable, _) => "-" + variable
 
-      val inputVars = matches
-        .filter(_.group(1) == "+")
-        .map(_.group(2))
-      val outputVars = matches
-        .filter(_.group(1) == "-")
-        .map(_.group(2))
+        // pattern matching anonymous function to extract the input '+' and output '-' variables from the predicate
+        val extractPredicateNotationSymbolVariables: ((Array[String], Array[String]), String) => (Array[String], Array[String]) =
+          case ((input, output), variable) => variable(0) match
+            case '+' => (input :+ variable.substring(1), output)
+            case '-' => (input, output :+ variable.substring(1))
+            case _ => (input, output)
 
-      Map(
-        "+" -> inputVars,
-        "-" -> outputVars)
-    }
+        val modifiedVariables = variables.zipWithIndex.map(addPredicateNotationSymbolsFunction)
+
+        val foldLeftCurry = modifiedVariables.foldLeft(Array.empty[String], Array.empty[String])
+        val (inputVars, outputVars) = foldLeftCurry(extractPredicateNotationSymbolVariables)
+        logger.trace(s" - extracted variables with predicate notation symbol '+': ${inputVars.mkString("Array(", ", ", ")")}")
+        logger.trace(s" - extracted variables with predicate notation symbol '-': ${outputVars.mkString("Array(", ", ", ")")}")
+        Predicate(inputVars, outputVars)
 
   /**
    * Method to extract and parse the 'clauses' method field of @PrologMethod annotations.

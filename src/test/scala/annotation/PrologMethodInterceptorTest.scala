@@ -37,6 +37,12 @@ trait TestPrologMethod:
   @PrologMethod(types = Array("Unit"))
   def testMethodTypes_Unit(): Unit
 
+  @PrologMethod()
+  def testMethodPredicate_default(): Unit
+
+  @PrologMethod(predicate = "p(X1, X2, Y).")
+  def testMethodPredicate_noSymbols(): Unit
+
   @PrologMethod(predicate = "p(+X1, +X2, -Y).")
   def testMethodPredicate_IO(): Unit
 
@@ -62,6 +68,10 @@ class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodTypes_ListListInt(): Unit = ()
 
   def testMethodTypes_Unit(): Unit = ()
+
+  def testMethodPredicate_default(): Unit = ()
+
+  def testMethodPredicate_noSymbols(): Unit = ()
 
   def testMethodPredicate_IO(): Unit = ()
 
@@ -158,6 +168,28 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodTypes_Unit")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       assertThrows[IllegalArgumentException](extractTypes(annotation))
+
+  /* @PrologMethod method field 'predicate' tests */
+
+  "PrologMethodUtils" should :
+    "extract empty predicate from a @PrologMethod if default predicate is present" in :
+      val prologMethod = classOf[TestPrologMethod].getMethod("testMethodPredicate_default")
+      val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
+      val actualPredicate = extractPredicate(annotation)
+      val expectedPredicate = Predicate(Array.empty, Array.empty)
+
+      assert(actualPredicate.inputVariables === expectedPredicate.inputVariables)
+      assert(actualPredicate.outputVariables === expectedPredicate.outputVariables)
+
+  "PrologMethodUtils" should:
+    "extract the correct predicate from a @PrologMethod if no predicate notation symbols are present" in:
+      val prologMethod = classOf[TestPrologMethod].getMethod("testMethodPredicate_noSymbols")
+      val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
+      val actualPredicate = extractPredicate(annotation)
+      val expectedPredicate = Predicate(Array("X1", "X2"), Array("Y"))
+
+      assert(actualPredicate.inputVariables === expectedPredicate.inputVariables)
+      assert(actualPredicate.outputVariables === expectedPredicate.outputVariables)
 
   "PrologMethodUtils" should:
     "extract the correct predicate from a @PrologMethod if predicate notation symbols are present" in:
