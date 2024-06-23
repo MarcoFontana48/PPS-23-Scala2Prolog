@@ -9,4 +9,4 @@ case class Types(types: Array[String]) extends PrologMethodEntity
 
 case class Clauses(clauses: Array[String]) extends PrologMethodEntity
 
-case class Predicate(predicate: String) extends PrologMethodEntity
+case class Predicate(inputVariables: Array[String], outputVariables: Array[String]) extends PrologMethodEntity

@@ -18,17 +18,18 @@ abstract class AnnotationUtils[A, +B]:
    */
   def extractMethodFields(annotation: A): B
 
+private type PrologMethodFields = Map[String, PrologMethodEntity]
 /**
  * Utility object to extract and parse the fields of @PrologMethod annotations.
  */
-object PrologMethodUtils extends AnnotationUtils[PrologMethod, Map[String, PrologMethodEntity]] with Logging:
+object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodFields] with Logging:
   /**
    * Method to extract and parse the fields of @PrologMethod annotations.
    *
    * @param prologMethod a @PrologMethod annotation.
    * @return a Map that contains the extracted and parsed method fields of the @PrologMethod annotation
    */
-  override def extractMethodFields(prologMethod: PrologMethod): Map[String, PrologMethodEntity] =
+  override def extractMethodFields(prologMethod: PrologMethod): PrologMethodFields =
     Map(
       "signatures" -> extractSignature(prologMethod),
       "predicate" -> extractPredicate(prologMethod),
@@ -46,10 +47,36 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, Map[String, Prolo
     prologMethod.predicate() match
       case predicate if predicate.isEmpty =>
         logger.trace("predicate is empty, returning default predicate")
-        Predicate("")
+        Predicate(Array.empty, Array.empty)
       case predicate =>
-        logger.trace(s"extracted predicate from @PrologMethod annotation: '$predicate'")
-        Predicate(predicate)
+        logger.trace(s"extracted predicate from @PrologMethod annotation: '$predicate', parsing its content...")
+        val variables = extractPrologPredicateNotationVariables(predicate)
+        logger.trace(s" - extracted variables with predicate notation symbol '+': ${variables("+").mkString("Array(", ", ", ")")}")
+        logger.trace(s" - extracted variables with predicate notation symbol '-': ${variables("-").mkString("Array(", ", ", ")")}")
+        Predicate(variables("+"), variables("-"))
+
+  private type PrologPredicateNotationVariables = Map[String, Array[String]] // + -> [X1,X2,...,XN], - -> [Y1,Y2,...,YN], ...
+  /**
+   * Method to extract the variables from a predicate notation string.
+   *
+   * @param predicate a predicate notation string.
+   * @return a Map that contains the extracted variables with their notation symbol
+   */
+  private def extractPrologPredicateNotationVariables(predicate: String): PrologPredicateNotationVariables = {
+      val pattern = "([+-])(\\w+)".r
+      val matches = pattern.findAllIn(predicate).matchData.toArray
+
+      val inputVars = matches
+        .filter(_.group(1) == "+")
+        .map(_.group(2))
+      val outputVars = matches
+        .filter(_.group(1) == "-")
+        .map(_.group(2))
+
+      Map(
+        "+" -> inputVars,
+        "-" -> outputVars)
+    }
 
   /**
    * Method to extract and parse the 'clauses' method field of @PrologMethod annotations.

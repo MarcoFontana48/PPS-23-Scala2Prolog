@@ -37,8 +37,8 @@ trait TestPrologMethod:
   @PrologMethod(types = Array("Unit"))
   def testMethodTypes_Unit(): Unit
 
-  @PrologMethod(predicate = "p(X).", clauses = Array("p(a)."))
-  def testMethodPredicateClauses(): Unit
+  @PrologMethod(predicate = "p(+X1, +X2, -Y).")
+  def testMethodPredicate_IO(): Unit
 
 class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodSignature_default(): Unit = ()
@@ -63,7 +63,7 @@ class TestPrologMethodImpl extends TestPrologMethod:
 
   def testMethodTypes_Unit(): Unit = ()
 
-  def testMethodPredicateClauses(): Unit = ()
+  def testMethodPredicate_IO(): Unit = ()
 
 class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
   import PrologMethodUtils.*
@@ -158,3 +158,13 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
       val prologMethod = classOf[TestPrologMethod].getMethod("testMethodTypes_Unit")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       assertThrows[IllegalArgumentException](extractTypes(annotation))
+
+  "PrologMethodUtils" should:
+    "extract the correct predicate from a @PrologMethod if predicate notation symbols are present" in:
+      val prologMethod = classOf[TestPrologMethod].getMethod("testMethodPredicate_IO")
+      val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
+      val actualPredicate = extractPredicate(annotation)
+      val expectedPredicate = Predicate(Array("X1", "X2"), Array("Y"))
+
+      assert(actualPredicate.inputVariables === expectedPredicate.inputVariables)
+      assert(actualPredicate.outputVariables === expectedPredicate.outputVariables)
