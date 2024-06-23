@@ -230,12 +230,12 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
   "PrologMethodUtils" should :
     "evaluate correctly the prolog goal 'p(X).' against theory 'p(a).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      assert(proxy.testMethodPredicateClauses_Xa() === LazyList(Term.createTerm("p(a)")))
+      assert(proxy.testMethodPredicateClauses_Xa() === Iterable(Term.createTerm("p(a)")))
 
   "PrologMethodUtils" should :
     "evaluate correctly the prolog goal 'p(-X).' against theory 'p(a).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      assert(proxy.testMethodPredicateClauses_minusXa() === LazyList(Term.createTerm("p(a)")))
+      assert(proxy.testMethodPredicateClauses_minusXa() === Iterable(Term.createTerm("p(a)")))
 
   "PrologMethodUtils" should :
     "throw an UndeclaredThrowableException when trying to solve the goal 'p(+X).' against theory 'p(a).'" in :
@@ -245,4 +245,4 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers:
   "PrologMethodUtils" should :
     "evaluate correctly the prolog goal 'p(-X).' against theory 'p(a). p(b). p(c).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      assert(proxy.testMethodPredicateClauses_minusXabc() === LazyList(Term.createTerm("p(a)"), Term.createTerm("p(b)"), Term.createTerm("p(c)")))
+      assert(proxy.testMethodPredicateClauses_minusXabc() === Iterable(Term.createTerm("p(a)"), Term.createTerm("p(b)"), Term.createTerm("p(c)")))
