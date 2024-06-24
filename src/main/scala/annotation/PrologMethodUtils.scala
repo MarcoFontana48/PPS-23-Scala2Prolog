@@ -18,7 +18,7 @@ abstract class AnnotationUtils[A, +B]:
    */
   def extractMethodFields(annotation: A): B
 
-type PrologMethodFields = Map[String, PrologMethodEntity]
+type PrologMethodFields = Map[String, Option[PrologMethodEntity]]
 
 /**
  * Utility object to extract and parse the fields of @PrologMethod annotations.
@@ -45,7 +45,7 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
    * @param prologMethod a @PrologMethod annotation.
    * @return a 'Predicate' that contains the informations about the predicate method field
    */
-  def extractPredicate(prologMethod: PrologMethod): Predicate =
+  def extractPredicate(prologMethod: PrologMethod): Option[Predicate] =
     Predicate(prologMethod.predicate())
 
   /**
@@ -54,7 +54,7 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
    * @param prologMethod a @PrologMethod annotation.
    * @return a 'Clauses' that contains the informations about the clauses method field
    */
-  def extractClauses(prologMethod: PrologMethod): Clauses =
+  def extractClauses(prologMethod: PrologMethod): Option[Clauses] =
     Clauses(prologMethod.clauses())
 
   /**
@@ -63,7 +63,7 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
    * @param prologMethod a @PrologMethod annotation.
    * @return a 'Types' that contains the informations about the types method field
    */
-  def extractTypes(prologMethod: PrologMethod): Types =
+  def extractTypes(prologMethod: PrologMethod): Option[Types] =
     Types(prologMethod.types())
 
   /**
@@ -72,5 +72,5 @@ object PrologMethodUtils extends AnnotationUtils[PrologMethod, PrologMethodField
    * @param prologMethod a @PrologMethod annotation.
    * @return a 'Signature' that contains the informations about the signature method field
    */
-  def extractSignature(prologMethod: PrologMethod): Signature =
+  def extractSignature(prologMethod: PrologMethod): Option[Signature] =
     Signature(prologMethod.signature())

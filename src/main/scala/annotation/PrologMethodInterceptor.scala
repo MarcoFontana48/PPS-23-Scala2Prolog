@@ -53,7 +53,7 @@ class PrologMethodHandler(originalObject: Any) extends InvocationHandler with Lo
       logger.trace("method is annotated with @PrologMethod, executing Prolog logic...")
       val prologMethodAnnotation = method.getAnnotation(classOf[PrologMethod])
       val fields = PrologMethodUtils.extractMethodFields(prologMethodAnnotation)
-      Scala2Prolog.setTheoryAndSolveGoal(fields, args)
+      Scala2Prolog.setTheoryAndSolveGoal(fields, Option(args))
     else
       logger.trace("method is not annotated with @PrologMethod, invoking the default method on the real object...")
       method.invoke(originalObject, args: _*)
