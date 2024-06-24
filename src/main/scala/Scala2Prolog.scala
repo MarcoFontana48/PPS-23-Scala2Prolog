@@ -14,11 +14,11 @@ object Scala2Prolog extends Logging:
    * Sets a theory and solves a goal in Prolog.
    *
    * @param fields a map containing the extracted values of method fields of the @PrologMethod annotation.
-   * @return a LazyList that is computed only when needed, containing the result of the goal
+   * @return an Iterable containing the result of the goal
    */
   def setTheoryAndSolveGoal(fields: PrologMethodFields, args: AnyRef): Iterable[Term] =
     val engine = Prolog()
-    val rules = fields("clauses").asInstanceOf[Clauses].values.mkString(" ")
+    val rules = fields("clauses").asInstanceOf[Clauses].value.mkString(" ")
     val goal = fields("predicate").asInstanceOf[Predicate].generateGoal() //TODO pass args of the annotated method
     logger.trace(s"Setting theory: $rules")
     engine.setTheory(Theory(rules))
@@ -26,6 +26,13 @@ object Scala2Prolog extends Logging:
     val solveInfo = engine.solve(goal)
     getAllSolutions(engine, solveInfo)
 
+  /**
+   * Gets all solutions of a goal.
+   *
+   * @param engine a Prolog engine from tuProlog library
+   * @param initialSolveInfo the initial SolveInfo object
+   * @return a LazyList (that is computed only when needed) containing all prolog solutions of the goal
+   */
   private def getAllSolutions(engine: Prolog, initialSolveInfo: SolveInfo): LazyList[Term] =
     LazyList.iterate(Try(initialSolveInfo)) {
       case Success(solveInfo) if solveInfo.hasOpenAlternatives => Try(engine.solveNext())
