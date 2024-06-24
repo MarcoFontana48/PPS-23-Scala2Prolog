@@ -35,12 +35,14 @@ object Scala2Prolog extends Logging:
     engine.setTheory(Theory(rules))
     logger.debug(s"Solving goal: $goal")
     val solveInfo = engine.solve(goal)
-    solveInfo.getSolution // remove
+    logger.trace(s"Solution found: ${solveInfo.getSolution}")
     LazyList.iterate(Try(solveInfo)) {
       case Success(solveInfo) if solveInfo.hasOpenAlternatives => Try(engine.solveNext())
       case _ => Failure(new NoSuchElementException)
     }.takeWhile(_.isSuccess).collect {
-      case Success(solveInfo) => solveInfo.getSolution
+      case Success(solveInfo) =>
+        logger.trace(s"Solution found: ${solveInfo.getSolution}")
+        solveInfo.getSolution
     }
 
   /**
@@ -54,8 +56,8 @@ object Scala2Prolog extends Logging:
     fields.get("predicate").flatten match
       case Some(predicate: Predicate) =>
         args match
-          case Some(values) => predicate.generateGoal(values.map(_.toString): _*)
-          case None => predicate.generateGoal()
+          case Some(values) => predicate.generateGoal(values)
+          case None => predicate.generateGoal(Array.empty)
       case _ => throw new Exception("Failed to extract predicate or predicate is not of type Predicate")
 
   /**

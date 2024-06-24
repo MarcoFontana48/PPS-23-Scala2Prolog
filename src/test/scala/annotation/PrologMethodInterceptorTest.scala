@@ -62,6 +62,12 @@ trait TestPrologMethod:
   @PrologMethod(predicate = "p(-X).", clauses = Array("p(a). p(b). p(c)."))
   def testMethodPredicateClauses_minusXabc(s: String): Iterable[Term]
 
+  @PrologMethod(predicate = "p(+X, -Y).", clauses = Array("p(X, X)."))
+  def testMethodPredicateClauses_A(list: List[Int]): Iterable[Term]
+
+  @PrologMethod(predicate = "p(+X, -Y).", clauses = Array("p(X, X). p(A, A)."))
+  def testMethodPredicateClauses_B(list: List[Int]): Iterable[Term]
+
 class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodSignature_default(): Unit = ()
 
@@ -98,6 +104,10 @@ class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodPredicateClauses_minusXa(s: String): Seq[Term] = null  // body of this method won't be used
 
   def testMethodPredicateClauses_minusXabc(s: String): Iterable[Term] = null  // body of this method won't be used
+
+  def testMethodPredicateClauses_A(list: List[Int]): Iterable[Term] = null  // body of this method won't be used
+
+  def testMethodPredicateClauses_B(list: List[Int]): Iterable[Term] = null  // body of this method won't be used
 
 class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers with Logging:
 
@@ -217,22 +227,40 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers with Lo
 
       assert(actualPredicate.get === expectedPredicate.get)
 
-  "PrologMethodUtils" should :
-    "evaluate correctly the prolog goal 'p(X).' against theory 'p(a).'" in :
-      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      assert(proxy.testMethodPredicateClauses_Xa("Y") === Iterable(Term.createTerm("p(a)")))
+  /* prolog method interceptor */
 
-  "PrologMethodUtils" should :
-    "evaluate correctly the prolog goal 'p(-X).' against theory 'p(a).'" in :
+  "PrologMethodInterceptor" should :
+    "evaluate correctly the prolog predicate 'p(X).', generate the right goal 'p(X)'and unify when compared " +
+      "against the theory: 'p(a).' generating 1 solution 'p(a).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      assert(proxy.testMethodPredicateClauses_minusXa("Y") === Iterable(Term.createTerm("p(a)")))
+      assert(proxy.testMethodPredicateClauses_Xa("X") === Iterable(Term.createTerm("p(a)")))
 
-  "PrologMethodUtils" should :
-    "throw an UndeclaredThrowableException when trying to solve the goal 'p(+X).' against theory 'p(a).'" in :
+  "PrologMethodInterceptor" should :
+    "evaluate correctly the prolog predicate 'p(-X).', generate the right goal 'p(X)'and unify when compared " +
+      "against the theory: 'p(a).' generating 1 solution 'p(a).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      assertThrows[UndeclaredThrowableException](proxy.testMethodPredicateClauses_plusXa("Y"))
+      assert(proxy.testMethodPredicateClauses_minusXa("X") === Iterable(Term.createTerm("p(a)")))
 
-  "PrologMethodUtils" should :
-    "evaluate correctly the prolog goal 'p(-X).' against theory 'p(a). p(b). p(c).'" in :
+  "PrologMethodInterceptor" should :
+    "evaluate correctly the prolog predicate 'p(+X).', generate the right goal 'p(X)' and unify when compared " +
+      "against the theory: 'p(a).' generating 1 solution 'p(a).'" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      assert(proxy.testMethodPredicateClauses_minusXabc("Y") === Iterable(Term.createTerm("p(a)"), Term.createTerm("p(b)"), Term.createTerm("p(c)")))
+      assert(proxy.testMethodPredicateClauses_plusXa("X") === Iterable(Term.createTerm("p(a)")))
+
+  "PrologMethodInterceptor" should :
+    "evaluate correctly the prolog predicate 'p(-X).' generate the right goal 'p(X)' and unify when compared " +
+      "against the theory 'p(a). p(b). p(c).' generating 3 solutions 'p(a). p(b). p(c)." in :
+      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
+      assert(proxy.testMethodPredicateClauses_minusXabc("X") === Iterable(Term.createTerm("p(a)"), Term.createTerm("p(b)"), Term.createTerm("p(c)")))
+
+  "PrologMethodInterceptor" should :
+    "evaluate correctly the prolog predicate 'p(+X, -Y).' generate the right goal 'p([1,2,3],Y)' and unify when compared " +
+      "against theory 'p(X, X).' generating 1 solution p([1,2,3],[1,2,3])" in :
+      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
+      assert(proxy.testMethodPredicateClauses_A(List(1, 2, 3)) === Iterable(Term.createTerm("p([1,2,3],[1,2,3])")))
+
+  "PrologMethodInterceptor" should :
+    "evaluate correctly the prolog predicate 'p(+X, -Y).' generate the right goal 'p([1,2,3],Y)' and unify when compared " +
+      "against theory 'p(X, X). p(A,A)' generating 2 solutions p([1,2,3],[1,2,3]). p([1,2,3],[1,2,3])." in :
+      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
+      assert(proxy.testMethodPredicateClauses_B(List(1, 2, 3)) === Iterable(Term.createTerm("p([1,2,3],[1,2,3])"), Term.createTerm("p([1,2,3],[1,2,3])")))

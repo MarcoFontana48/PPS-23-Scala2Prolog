@@ -14,9 +14,9 @@ sealed trait PrologMethodEntity extends Logging:
    * Method to check if the extracted field of the annotation is empty
    *
    * @param param   a string that represents the value of the method field of the @PrologMethod annotation.
-   * @param default a default call-by-name parameter (that is evaluated each time it is used within the method) to be
+   * @param default a default call-by-name parameter function (that is evaluated each time it is used within the method) to be
    *                returned if the method field is empty.
-   * @param action  an action call-by-name parameter (that is evaluated each time it is used within the method) to be
+   * @param action  an action call-by-name parameter function (that is evaluated each time it is used within the method) to be
    *                executed if the method field is not empty.
    * @tparam T the return type of the method field.
    * @return a generic type T that contains the extracted and parsed field of the annotation
@@ -41,11 +41,11 @@ case class Predicate(term: Term) extends PrologMethodEntity with Logging:
    *                    replace the predicate input variables.
    * @return a string that represents the goal.
    */
-  def generateGoal(inputValues: String*): Term =
+  def generateGoal(inputValues: Array[AnyRef]): Term =
     val termStr = term.toString
     logger.trace(s"term as string: '$termStr'")
-    val outputVariablePattern = "'-'\\(([A-Z]\\w*)\\)".r
-    val variables = outputVariablePattern.findAllMatchIn(termStr).toList.map(_.group(1))
+    val variablePattern = "'[-|+]?'\\(([A-Z]\\w*)\\)".r
+    val variables = variablePattern.findAllMatchIn(termStr).toList.map(_.group(1))
     logger.trace(s"extracted variables from term: '${variables.mkString("List(", ", ", ")")}'")
 
     /**
@@ -59,12 +59,24 @@ case class Predicate(term: Term) extends PrologMethodEntity with Logging:
      * @return a string that represents the predicate with the input variables replaced by the input values.
      */
     @tailrec
-    def replaceTermsHelper(vars: List[String], values: Seq[String], acc: String): String =
+    def replaceTermsHelper(vars: List[String], values: List[AnyRef], acc: String): String =
       (vars, values) match
-        case (Nil, _) | (_, Nil) => acc
-        case (v :: vs, value :: restValues) =>
-          val updatedAcc = acc.replaceFirst(s"'-'\\($v\\)", s"$value")
-          replaceTermsHelper(vs, restValues, updatedAcc)
+        case (varHead :: varTail, valueHead :: valueTail) =>
+          logger.trace(s"current value: '$valueHead', current variable: '$varHead'")
+          val valueHeadReplace = valueHead match
+            case value: Iterable[_] => value.mkString("[", ", ", "]")
+            case _ => valueHead.toString
+          val updatedAcc = acc.replaceFirst(s"'[-|+]?'\\($varHead\\)", valueHeadReplace)
+          replaceTermsHelper(varTail, valueTail, updatedAcc)
+        case (varHead :: varTail, Nil) =>
+          logger.trace(s"current value: 'Nil', current variable: '$varHead'")
+          val updatedAcc = acc.replaceFirst(s"'-?'\\($varHead\\)", varHead)
+          replaceTermsHelper(varTail, values, updatedAcc)
+        case (Nil, valueHead :: valueTail) =>
+          logger.trace(s"current value: '$valueHead', current variable: 'Nil'")
+          val updateAcc = acc.replaceFirst(s"[A-Z]\\w*", valueHead.toString)
+          replaceTermsHelper(vars, valueTail, updateAcc)
+        case _ if vars.isEmpty && values.isEmpty => acc
         case _ => throw new IllegalArgumentException("Unexpected pattern encountered in vars and values")
 
     val replacedTermStr = replaceTermsHelper(variables, inputValues.toList, termStr)
