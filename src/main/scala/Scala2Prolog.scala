@@ -30,20 +30,40 @@ object Scala2Prolog extends Logging:
    * @return an Iterable containing all the results of the goal
    */
   private def computeAllSolutions(rules: String, goal: Term): Iterable[Term] =
+    // Create a new Prolog engine
     val engine = Prolog()
+
+    // Set the theory
     logger.debug(s"Setting theory: $rules")
     engine.setTheory(Theory(rules))
+
+    // Compute the goal solutions
+    // - get the first solution
     logger.debug(s"Solving goal: $goal")
-    val solveInfo = engine.solve(goal)
-    logger.trace(s"Solution found: ${solveInfo.getSolution}")
-    LazyList.iterate(Try(solveInfo)) {
+    val firstSolveInfo = engine.solve(goal)
+
+    // - define a high-order function to initialize the LazyList to compute elements only when needed
+    val initializeLazyListFn: (Try[SolveInfo] => Try[SolveInfo]) => LazyList[Try[SolveInfo]] = LazyList.iterate(Try(firstSolveInfo))
+
+    // - define the anonymous partial pattern matching function to compute the next solution
+    val computeNextSolutionFn: Try[SolveInfo] => Try[SolveInfo] = {
       case Success(solveInfo) if solveInfo.hasOpenAlternatives => Try(engine.solveNext())
       case _ => Failure(new NoSuchElementException)
-    }.takeWhile(_.isSuccess).collect {
-      case Success(solveInfo) =>
-        logger.trace(s"Solution found: ${solveInfo.getSolution}")
-        solveInfo.getSolution
     }
+
+    // - define the anonymous partial pattern matching function to extract the solution
+    val extractNextSolutionFn: ((Try[SolveInfo], Int)) => Option[Term] = {
+      case (Success(solveInfo), index) if solveInfo.isSuccess && solveInfo.getSolution != null =>
+        logger.trace(s"Solution ${index + 1} found: ${solveInfo.getSolution}")
+        Some(solveInfo.getSolution)
+      case _ => None
+    }
+
+    // Return the solutions by assembling previously declared functions
+    initializeLazyListFn(computeNextSolutionFn)
+      .takeWhile(_.isSuccess)
+      .zipWithIndex
+      .flatMap(extractNextSolutionFn)
 
   /**
    * Generates a goal from the extracted fields of the @PrologMethod annotation.
