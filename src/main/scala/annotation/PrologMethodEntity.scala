@@ -98,13 +98,13 @@ case class Predicate(term: Term) extends PrologMethodEntity with Logging:
         case (varHead :: varTail, Nil) =>                     replaceTermsHelper  (varTail)(values) (acc.replaceFirst(getPredicateVariableNotationPattern(varHead), varHead))
         case (Nil, valueHead :: valueTail) =>                 replaceTermsHelper  (vars)(valueTail) (acc.replaceFirst(getPredicateVariableStandardPattern, replaceVariableNotationPatternWithValue("Nil")(valueHead)))
         case (Nil, Nil) => acc
-        case _ => throw new IllegalArgumentException("Unexpected pattern encountered in vars and values")
 
     // convert term to string
     val termStr = term.toString
     logger.trace(s"term as string: '$termStr'")
 
-    // extract variables from term
+    // extract variables from term. The predicate notation is represented as concatenation of operator and term, since
+    // the input variable has tuProlog type Term: i.e.: '+'(V) )
     val variablePattern = "'[-|+]?'\\(([A-Z]\\w*)\\)".r
     val variables = variablePattern.findAllMatchIn(termStr).toList.map(_.group(1))
     logger.trace(s"extracted variables from term: '${variables.mkString("List(", ", ", ")")}'")
