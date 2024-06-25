@@ -23,7 +23,6 @@ sealed trait PrologMethodEntity extends Logging:
    */
   def isEmpty[T](param: String, default: => T, action: => T): T = param match
     case p if p.isEmpty =>
-      logger.trace(s"parameter is empty, returning default value")
       default
     case _ =>
       action
@@ -42,11 +41,45 @@ case class Predicate(term: Term) extends PrologMethodEntity with Logging:
    * @return a string that represents the goal.
    */
   def generateGoal(inputValues: Array[AnyRef]): Term =
-    val termStr = term.toString
-    logger.trace(s"term as string: '$termStr'")
-    val variablePattern = "'[-|+]?'\\(([A-Z]\\w*)\\)".r
-    val variables = variablePattern.findAllMatchIn(termStr).toList.map(_.group(1))
-    logger.trace(s"extracted variables from term: '${variables.mkString("List(", ", ", ")")}'")
+    /**
+     * Method to replace the input variables of the predicate with the input values of the method annotated
+     * with @PrologMethod.
+     *
+     * @param variable a string that represents the input variable of the predicate.
+     * @param value    an object that represents the input value of the method annotated with @PrologMethod.
+     * @return a string that represents the predicate with the input variable replaced by the input value.
+     */
+    def replaceVariableNotationPatternWithValue(variable: String)(value: AnyRef): String = value match {
+      case valueIterable: Iterable[_] =>
+        val valueStr = valueIterable.mkString("[", ", ", "]")
+        logger.trace(s"replacing variable '$variable' with iterable value: '$valueStr'")
+        valueStr
+      case _ =>
+        logger.trace(s"replacing variable '$variable' with non-iterable value: '$value'")
+        value.toString
+    }
+
+    /**
+     * Method to get the pattern of the predicate variable notation.
+     * The predicate notation is represented as concatenation of operator and term, since the input variable has
+     * tuProlog type Term: '-|+'(variable)
+     *
+     * @param variable a string that represents the input variable of the predicate.
+     * @return a string that represents the pattern of the predicate variable notation.
+     */
+    def getPredicateVariableNotationPattern(variable: String) = {
+      s"'[-|+]'\\($variable\\)"
+    }
+
+    /**
+     * Method to get the pattern of the predicate variable standard notation.
+     * The predicate standard notation is represented as a variable that starts with an uppercase letter.
+     *
+     * @return a string that represents the pattern of the predicate variable standard notation.
+     */
+    def getPredicateVariableStandardPattern = {
+      s"[A-Z]\\w*"
+    }
 
     /**
      * Method to replace the input variables of the predicate with the input values of the method annotated
@@ -59,27 +92,25 @@ case class Predicate(term: Term) extends PrologMethodEntity with Logging:
      * @return a string that represents the predicate with the input variables replaced by the input values.
      */
     @tailrec
-    def replaceTermsHelper(vars: List[String], values: List[AnyRef], acc: String): String =
+    def replaceTermsHelper(vars: List[String])(values: List[AnyRef])(acc: String): String =
       (vars, values) match
-        case (varHead :: varTail, valueHead :: valueTail) =>
-          logger.trace(s"current value: '$valueHead', current variable: '$varHead'")
-          val valueHeadReplace = valueHead match
-            case value: Iterable[_] => value.mkString("[", ", ", "]")
-            case _ => valueHead.toString
-          val updatedAcc = acc.replaceFirst(s"'[-|+]?'\\($varHead\\)", valueHeadReplace)
-          replaceTermsHelper(varTail, valueTail, updatedAcc)
-        case (varHead :: varTail, Nil) =>
-          logger.trace(s"current value: 'Nil', current variable: '$varHead'")
-          val updatedAcc = acc.replaceFirst(s"'-?'\\($varHead\\)", varHead)
-          replaceTermsHelper(varTail, values, updatedAcc)
-        case (Nil, valueHead :: valueTail) =>
-          logger.trace(s"current value: '$valueHead', current variable: 'Nil'")
-          val updateAcc = acc.replaceFirst(s"[A-Z]\\w*", valueHead.toString)
-          replaceTermsHelper(vars, valueTail, updateAcc)
-        case _ if vars.isEmpty && values.isEmpty => acc
+        case (varHead :: varTail, valueHead :: valueTail) =>  replaceTermsHelper(varTail)(valueTail)(acc.replaceFirst(getPredicateVariableNotationPattern(varHead), replaceVariableNotationPatternWithValue(varHead)(valueHead)))
+        case (varHead :: varTail, Nil) =>                     replaceTermsHelper  (varTail)(values) (acc.replaceFirst(getPredicateVariableNotationPattern(varHead), varHead))
+        case (Nil, valueHead :: valueTail) =>                 replaceTermsHelper  (vars)(valueTail) (acc.replaceFirst(getPredicateVariableStandardPattern, replaceVariableNotationPatternWithValue("Nil")(valueHead)))
+        case (Nil, Nil) => acc
         case _ => throw new IllegalArgumentException("Unexpected pattern encountered in vars and values")
 
-    val replacedTermStr = replaceTermsHelper(variables, inputValues.toList, termStr)
+    // convert term to string
+    val termStr = term.toString
+    logger.trace(s"term as string: '$termStr'")
+
+    // extract variables from term
+    val variablePattern = "'[-|+]?'\\(([A-Z]\\w*)\\)".r
+    val variables = variablePattern.findAllMatchIn(termStr).toList.map(_.group(1))
+    logger.trace(s"extracted variables from term: '${variables.mkString("List(", ", ", ")")}'")
+
+    // replace variables with values
+    val replacedTermStr = replaceTermsHelper(variables)(inputValues.toList)(termStr)
     logger.trace(s"replaced term: '$replacedTermStr'")
     Term.createTerm(replacedTermStr)
 
@@ -124,10 +155,9 @@ object Signature extends PrologMethodEntity with Logging:
 
       matchOption match
         case Some(m) =>
-          val inputVarsGroupIndex = 1
-          val outputVarsGroupIndex = 3
-          val inputVars = m.group(inputVarsGroupIndex).split(",").map(_.trim)
-          val outputVars = m.group(outputVarsGroupIndex).split(",").map(_.trim)
+          // index group 1 is 'input' variables, 2 is the arrow symbol of the signature, 3 is 'output' variables
+          val inputVars = m.group(1).split(",").map(_.trim)
+          val outputVars = m.group(3).split(",").map(_.trim)
           logger.trace(s"extracted input and output variables from signature: 'input=${inputVars.mkString("Array(", ", ", ")")}', 'output=${outputVars.mkString("Array(", ", ", ")")}'")
           Some(new Signature(inputVars, outputVars))
         case None =>
