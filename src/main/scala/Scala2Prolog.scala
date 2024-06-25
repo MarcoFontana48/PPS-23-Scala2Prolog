@@ -5,6 +5,7 @@ import annotation.{Clauses, Predicate, PrologMethodFields}
 import alice.tuprolog.{Prolog, SolveInfo, Term, Theory}
 import org.apache.logging.log4j.scala.Logging
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -73,12 +74,78 @@ object Scala2Prolog extends Logging:
    * @return a Term containing the goal to solve.
    */
   private def generateGoal(fields: PrologMethodFields, args: Option[Array[AnyRef]]): Term =
-    fields.get("predicate").flatten match
-      case Some(predicate: Predicate) =>
-        args match
-          case Some(values) => predicate.generateGoal(values)
-          case None => predicate.generateGoal(Array.empty)
-      case _ => throw new Exception("Failed to extract predicate or predicate is not of type Predicate")
+    /**
+     * Method to replace the input variables of the predicate with the input values of the method annotated
+     * with @PrologMethod.
+     *
+     * @param variable a string that represents the input variable of the predicate.
+     * @param value    an object that represents the input value of the method annotated with @PrologMethod.
+     * @return a string that represents the predicate with the input variable replaced by the input value.
+     */
+    def replaceVariableNotationPatternWithValue(variable: String)(value: AnyRef): String = value match {
+      case valueIterable: Iterable[_] =>
+        val valueStr = valueIterable.mkString("[", ",", "]")
+        logger.trace(s"replacing variable '$variable' with iterable value: '$valueStr'")
+        valueStr
+      case _ =>
+        logger.trace(s"replacing variable '$variable' with non-iterable value: '$value'")
+        value.toString
+    }
+
+    /**
+     * Method to get the pattern of the predicate variable notation.
+     * The predicate notation is represented as concatenation of operator and term, since the input variable has
+     * tuProlog type Term: '-|+'(variable)
+     *
+     * @param variable a string that represents the input variable of the predicate.
+     * @return a string that represents the pattern of the predicate variable notation.
+     */
+    def getPredicateVariableNotationPattern(variable: String) = {
+      s"'[-|+]'\\($variable\\)"
+    }
+
+    /**
+     * Method to get the pattern of the predicate variable standard notation.
+     * The predicate standard notation is represented as a variable that starts with an uppercase letter.
+     *
+     * @return a string that represents the pattern of the predicate variable standard notation.
+     */
+    def getPredicateVariableStandardPattern = {
+      s"[A-Z]\\w*"
+    }
+
+    /**
+     * Method to replace the input variables of the predicate with the input values of the method annotated
+     * with @PrologMethod.
+     *
+     * @param vars   a list that contains the input variables of the predicate.
+     * @param values a sequence that contains the input values of the method annotated with @PrologMethod.
+     * @param acc    a string that represents the accumulator that will gradually accumulate the predicate with the
+     *               input variables
+     * @return a string that represents the predicate with the input variables replaced by the input values.
+     */
+    @tailrec
+    def replaceTermsHelper(vars: List[String])(values: List[AnyRef])(acc: String): String =
+      (vars, values) match
+        case (varHead :: varTail, valueHead :: valueTail) =>  replaceTermsHelper(varTail)(valueTail)(acc.replaceFirst(getPredicateVariableNotationPattern(varHead), replaceVariableNotationPatternWithValue(varHead)(valueHead)))
+        case (varHead :: varTail, Nil) =>                     replaceTermsHelper  (varTail)(values) (acc.replaceFirst(getPredicateVariableNotationPattern(varHead), varHead))
+        case (Nil, valueHead :: valueTail) =>                 replaceTermsHelper  (vars)(valueTail) (acc.replaceFirst(getPredicateVariableStandardPattern, replaceVariableNotationPatternWithValue("Nil")(valueHead)))
+        case (Nil, Nil) => acc
+
+    // convert term to string
+    val termStr = fields("predicate").getOrElse("").asInstanceOf[Predicate].term.toString
+    logger.trace(s"predicate term as string: '$termStr'")
+
+    // extract variables from term. The predicate notation is represented as concatenation of operator and term, since
+    // the input variable has tuProlog type Term: i.e.: '+'(V) )
+    val variablePattern = "'[-|+]?'\\(([A-Z]\\w*)\\)".r
+    val variables = variablePattern.findAllMatchIn(termStr).toList.map(_.group(1))
+    logger.trace(s"extracted variables from term: '${variables.mkString("List(", ", ", ")")}'")
+
+    // replace variables with values
+    val replacedTermStr = replaceTermsHelper(variables)(args.getOrElse(Array.empty[AnyRef]).toList)(termStr)
+    logger.trace(s"replaced term: '$replacedTermStr'")
+    Term.createTerm(replacedTermStr)
 
   /**
    * Generates rules from the extracted fields of the @PrologMethod annotation.
