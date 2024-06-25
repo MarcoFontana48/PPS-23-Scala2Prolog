@@ -36,6 +36,7 @@ object PrologMethodInterceptor extends Logging with Interceptor:
   override def create[A](originalObject: A): A =
     logger.trace(s"creating a new PrologMethodHandler for the original object '$originalObject'...")
     val handler = PrologMethodHandler(originalObject)
+    
     logger.trace("creating a new Proxy instance...")
     Proxy.newProxyInstance(originalObject.getClass.getClassLoader, originalObject.getClass.getInterfaces, handler).asInstanceOf[A]
 
@@ -47,13 +48,29 @@ object PrologMethodInterceptor extends Logging with Interceptor:
  * @param originalObject the original object, methods calls of this object annotated with @PrologMethod are intercepted
  */
 class PrologMethodHandler(originalObject: Any) extends InvocationHandler with Logging:
+  /**
+   * Intercepts the method call of the proxy instance and executes the logic of the annotated @PrologMethod method
+   * instead of the original method body.
+   *
+   * @param proxy the proxy instance that intercepts the method call
+   * @param method the method to invoke
+   * @param args the arguments to pass to the method
+   * @return the result of the method call
+   */
   override def invoke(proxy: Any, method: Method, args: Array[AnyRef]): AnyRef =
     logger.debug(s"invoking method '${method.getName}' on proxy of original object '$originalObject'...")
+
+    // if the method is annotated with @PrologMethod, execute the Prolog logic
     if method.isAnnotationPresent(classOf[PrologMethod]) then
+      // extract the fields of the @PrologMethod annotation
       logger.trace("method is annotated with @PrologMethod, executing Prolog logic...")
       val prologMethodAnnotation = method.getAnnotation(classOf[PrologMethod])
       val fields = PrologMethodUtils.extractMethodFields(prologMethodAnnotation)
+
+      // set the theory and solve the goal using tuProlog
       Scala2Prolog.setTheoryAndSolveGoal(fields, Option(args))
+
+    // else, the method is not annotated with @PrologMethod, invoke the default method on the real object as if there was no proxy
     else
       logger.trace("method is not annotated with @PrologMethod, invoking the default method on the real object...")
       method.invoke(originalObject, args: _*)
