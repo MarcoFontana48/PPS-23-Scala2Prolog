@@ -117,6 +117,24 @@ trait PrologMethodInterceptorDeclarationTest:
   )
   def point_B(x: String, y: Int): Iterable[Term]
 
+  @PrologMethod(
+    predicate = "sum(@X, ?Y)",
+    clauses = Array(
+      "sum([], 0).",
+      "sum([H|T], S) :- sum(T, N), S is H + N."
+    )
+  )
+  def sumElementsInList_A(x: List[Int], y: String): Iterable[Term]
+
+  @PrologMethod(
+    predicate = "sum(?X, ?Y)",
+    clauses = Array(
+      "sum([], 0).",
+      "sum([H|T], S) :- sum(T, N), S is H + N."
+    )
+  )
+  def sumElementsInList_B(x: List[Int], y: Int): Iterable[Term]
+
 class PrologMethodInterceptorDeclarationTestImpl extends PrologMethodInterceptorDeclarationTest:
 
   def PrologMethodInterceptor_notAnnotatedMethod_Int(a:Int, b:Int): Int =
@@ -157,6 +175,10 @@ class PrologMethodInterceptorDeclarationTestImpl extends PrologMethodInterceptor
   def point(x: String, y: String): Iterable[List[Int]] = null
 
   def point_B(x: String, y: Int): Iterable[Term] = null
+  
+  def sumElementsInList_A(x: List[Int], y: String): Iterable[Term] = null
+
+  def sumElementsInList_B(x: List[Int], y: Int): Iterable[Term] = null
 
 class PrologMethodInterceptorTest extends AbstractAnnotationTest with Matchers with Logging:
 
@@ -308,3 +330,31 @@ class PrologMethodInterceptorTest extends AbstractAnnotationTest with Matchers w
       assert(proxy.point_B("X", 4) === Iterable(
         createTerm("point_B(3,4)")
       ))
+
+  "PrologMethodInterceptor" should :
+    "intercept the @PrologMethod annotation and execute its logic, guessing and inferring missing fields and types " +
+      "correctly if not present when:" +
+      "predicate = sum(@X, ?Y)," +
+      "clauses = Array(sum([], 0).,sum([H|T], S) :- sum(T, N), S is H + N.)" in :
+      val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
+      assert(proxy.sumElementsInList_A(List(1,2,3,4), "X") === Iterable(
+        createTerm("sum([1,2,3,4],10)")
+      ))
+
+  "PrologMethodInterceptor" should :
+    "intercept the @PrologMethod annotation and execute its logic, guessing and inferring missing fields and types " +
+      "correctly if not present when:" +
+      "predicate = sum(?X, ?Y)," +
+      "clauses = Array(sum([], 0).,sum([H|T], S) :- sum(T, N), S is H + N.)" in :
+      val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
+      assert(proxy.sumElementsInList_B(List(1, 2, 3, 4, 5), 15) === Iterable(
+        createTerm("sum([1,2,3,4,5],15)")
+      ))
+
+  "PrologMethodInterceptor" should :
+    "intercept the @PrologMethod annotation and execute its logic, guessing and inferring missing fields and types " +
+      "correctly if not present and retuning empty Iterable if no solutions were found:" +
+      "predicate = sum(?X, ?Y)," +
+      "clauses = Array(sum([], 0).,sum([H|T], S) :- sum(T, N), S is H + N.)" in :
+      val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
+      assert(proxy.sumElementsInList_B(List(1, 2, 3, 4, 5), 10) === Iterable.empty)

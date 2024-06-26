@@ -45,7 +45,22 @@ object Predicate extends PrologMethodEntity with Logging:
       None
     }, {
       logger.trace(s"extracted predicate from @PrologMethod annotation: '$param', parsing its content...")
-      Some(new Predicate(createTerm(param)))
+
+      // pattern: 'name(+Varname1, Varname2, ..., ?Varname3)' where in front of any Varname may appear one of those
+      // symbols '+', '-', '?', '@' or none
+      val pattern = "\\w+\\(\\s*([+-@?]?\\w+\\s*,\\s*)*[+-@?]?\\w+\\s*\\)".r
+      val matchOption = pattern.findFirstIn(param)
+
+      // if the pattern matches the parameter, then parse the predicate to remove any '?' and '@' occurrences because
+      // they're inferred
+      matchOption match
+        case Some(matched) =>
+          val cleanedParam = matched.replaceAll("[?@]", "")
+          logger.trace(s"parsed predicate: '$cleanedParam'")
+          Some(new Predicate(createTerm(cleanedParam)))
+        case None =>
+          logger.trace("given parameter does not match the expected pattern, returning None predicate...")
+          None
     })
 
 /**

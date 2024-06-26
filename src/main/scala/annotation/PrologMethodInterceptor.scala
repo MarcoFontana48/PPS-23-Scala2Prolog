@@ -72,5 +72,5 @@ class PrologMethodHandler(originalObject: Any) extends InvocationHandler with Lo
 
     // else, the method is not annotated with @PrologMethod, invoke the default method on the real object as if there was no proxy
     else
-      logger.trace("method is not annotated with @PrologMethod, invoking the default method on the real object...")
+      logger.debug("method is not annotated with @PrologMethod, invoking the default method on the real object...")
       method.invoke(originalObject, args: _*)
