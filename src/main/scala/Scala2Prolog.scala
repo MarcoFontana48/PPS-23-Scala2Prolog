@@ -101,7 +101,7 @@ object Scala2Prolog extends Logging:
         case (Nil, Nil) => acc
 
     // convert term to string
-    val termStr = fields("predicate").getOrElse("").asInstanceOf[Predicate].term.toString
+    val termStr = fields("predicate").getOrElse(Predicate("")).asInstanceOf[Predicate].term.toString
     logger.trace(s"predicate term as string: '$termStr'")
 
     // extract variables from term. The predicate notation is represented as concatenation of operator and term, since
@@ -170,17 +170,19 @@ object Scala2Prolog extends Logging:
     val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
 
     (typesOption, signaturesOption) match
-      // if both types and signatures are present, compute the declared return type and return the solution using it
       case (Some(types), Some(signatures)) =>
-        // extract the declared return type
-        val lastOutputVarIndex = signatures.outputVars.length - 1
-        val outType = types.values(lastOutputVarIndex)
+        val lastInputVarIndex = signatures.inputVars.length - 1
 
-        // if the declared return type is a List, return the solutions as a List, else returns a generic Iterable[Term]
-        if outType.startsWith("List") then
-          signatures.outputVars.flatMap(outVar => solveInfos.map(_.getTerm(outVar)).toList)
-        else
+        val listContentPattern = "List\\[(.*)]".r
+        val outputTypes = signatures.outputVars.indices.map(idx => types.values(lastInputVarIndex + idx + 1))
+
+        if (outputTypes.forall(_ matches listContentPattern.pattern.pattern())) {
+          logger.trace(s"output types are all lists, returning the results as a list of lists")
+          solveInfos.flatMap(info => signatures.outputVars.map(info.getTerm)).toList
+        } else {
+          logger.trace(s"output types are not all lists, returning the results as a generic iterable of terms")
           solveInfos.map(_.getSolution)
+        }
 
       // otherwise return the results as generic Iterable[Term] type
       case _ => solveInfos.map(_.getSolution)

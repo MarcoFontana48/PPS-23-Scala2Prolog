@@ -63,6 +63,42 @@ trait PrologMethodInterceptorDeclarationTest:
   )
   def testMethodPredicatePermutations_C(list: List[String]): Iterable[List[String]]
 
+  @PrologMethod(
+    predicate = "point(+X, +Y).",
+    signature = "() -> {X_POS, Y_POS}",
+    types = Array("Int","Int"),
+    clauses = Array(
+      "point(3, 4).",
+      "point(-1, 2).",
+      "point(0, 0)."
+    )
+  )
+  def testMethodPredicatePermutations_D(x: String, y: String): Iterable[List[Int]]
+
+  @PrologMethod(
+    predicate = "point(+X, +Y, +Z).",
+    signature = "() -> {X_POS, Y_POS, Z_POS}",
+    types = Array("Double", "Double", "Double"),
+    clauses = Array(
+      "point(3.14, 4.2, 1.0).",
+      "point(-1.0, 2.67, 1.0).",
+      "point(0.111, 0.23, 2.0)."
+    )
+  )
+  def testMethodPredicatePermutations_E(x: String, y: String, z: String): Iterable[Term]
+
+  @PrologMethod(
+    predicate = "point(+X, +Y, +Z).",
+    signature = "() -> {X_POS, Y_POS}",
+    types = Array("Double", "Double"),
+    clauses = Array(
+      "point(3.14, 4.2, 1.0).",
+      "point(-1.0, 2.67, 1.0).",
+      "point(0.111, 0.23, 2.0)."
+    )
+  )
+  def testMethodPredicatePermutations_F(x: String, y: String, z: Double): Iterable[List[Int]]
+
 class PrologMethodInterceptorDeclarationTestImpl extends PrologMethodInterceptorDeclarationTest:
 
   def PrologMethodInterceptor_notAnnotatedMethod_Int(a:Int, b:Int): Int =
@@ -92,7 +128,13 @@ class PrologMethodInterceptorDeclarationTestImpl extends PrologMethodInterceptor
 
   def testMethodPredicatePermutations_B(list: List[Int]): Iterable[List[Int]] = null  
 
-  def testMethodPredicatePermutations_C(list: List[String]): Iterable[List[String]] = null  
+  def testMethodPredicatePermutations_C(list: List[String]): Iterable[List[String]] = null
+
+  def testMethodPredicatePermutations_D(x: String, y: String): Iterable[List[Int]] = null
+  
+  def testMethodPredicatePermutations_E(x: String, y: String, z: String): Iterable[Term] = null
+  
+  def testMethodPredicatePermutations_F(x: String, y: String, z: Double): Iterable[List[Int]] = null
 
 class PrologMethodInterceptorTest extends AbstractAnnotationTest with Matchers with Logging:
   
@@ -182,4 +224,42 @@ class PrologMethodInterceptorTest extends AbstractAnnotationTest with Matchers w
         Term.createTerm("[b,c,a]"),
         Term.createTerm("[c,a,b]"),
         Term.createTerm("[c,b,a]")
+      ))
+
+  "PrologMethodInterceptor" should :
+    "intercept the @PrologMethod annotation and execute its logic producing the correct result when:" +
+      "predicate = point(+X, +Y).," +
+      "signature = () -> {X_POS, Y_POS}," +
+      "types = Array(Int, Int)," +
+      "clauses = Array(point(3, 4).,point(-1, 2).,point(0, 0).)" in :
+      val proxy = PrologMethodInterceptor.create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
+      assert(proxy.testMethodPredicatePermutations_D("X","Y") === List(
+        Term.createTerm("point(3,4)"),
+        Term.createTerm("point(-1,2)"),
+        Term.createTerm("point(0,0)")
+      ))
+
+  "PrologMethodInterceptor" should :
+    "intercept the @PrologMethod annotation and execute its logic producing the correct result when:" +
+      "predicate = point(+X, +Y, +Z).," +
+      "signature = () -> {X_POS, Y_POS, Z_POS}," +
+      "types = Array(Double, Double, Double)," +
+      "clauses = Array(point(3.14, 4.2, 1.0).,point(-1.0, 2.67, 1.0).,point(0.111, 0.23, 2.0).)\n  " in :
+      val proxy = PrologMethodInterceptor.create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
+      assert(proxy.testMethodPredicatePermutations_E("X", "Y", "Z") === Iterable(
+        Term.createTerm("point(3.14,4.2,1.0)"),
+        Term.createTerm("point(-1.0,2.67,1.0)"),
+        Term.createTerm("point(0.111,0.23,2.0)")
+      ))
+
+  "PrologMethodInterceptor" should :
+    "intercept the @PrologMethod annotation and execute its logic producing the correct result when:" +
+      "predicate = point(+X, +Y, +Z).," +
+      "signature = () -> {X_POS, Y_POS}," +
+      "types = Array(Double, Double)," +
+      "clauses = Array(point(3.14, 4.2, 1.0).,point(-1.0, 2.67, 1.0).,point(0.111, 0.23, 2.0).)\n  " in :
+      val proxy = PrologMethodInterceptor.create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
+      assert(proxy.testMethodPredicatePermutations_F("X", "Y", 1.0) === List(
+        Term.createTerm("point(3.14,4.2,1.0)"),
+        Term.createTerm("point(-1.0,2.67,1.0)")
       ))
