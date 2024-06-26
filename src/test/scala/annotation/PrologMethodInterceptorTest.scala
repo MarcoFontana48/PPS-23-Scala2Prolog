@@ -68,17 +68,37 @@ trait TestPrologMethod:
 
   @PrologMethod(
     predicate = "permutation(+X,-Y)",
-    signature = "(X)->{Y}",
-    types = Array(
-      "List[Int]",
-      "List[Int]"),
     clauses = Array(
       "any([X|Xs],X,Xs).",
       "any([X|Xs],E,[X|Ys]):-any(Xs,E,Ys).",
       "permutation([],[]).",
       "permutation(Xs,[X|Ys]):-any(Xs,X,Zs), permutation(Zs,Ys).")
   )
-  def testMethodPredicatePermutations(list: List[Int]): Iterable[Term]
+  def testMethodPredicatePermutations_A(list: List[Int]): Iterable[Term]
+
+  @PrologMethod(
+    predicate = "permutation(+X,-Y)",
+    signature = "(X) -> {Y}",
+    types = Array("List[Int]","List[Int]"),
+    clauses = Array(
+      "any([X|Xs],X,Xs).",
+      "any([X|Xs],E,[X|Ys]):-any(Xs,E,Ys).",
+      "permutation([],[]).",
+      "permutation(Xs,[X|Ys]):-any(Xs,X,Zs), permutation(Zs,Ys).")
+  )
+  def testMethodPredicatePermutations_B(list: List[Int]): Iterable[List[Int]]
+
+  @PrologMethod(
+    predicate = "permutation(+X,-Y)",
+    signature = "(X) -> {Y}",
+    types = Array("List[String]","List[String]"),
+    clauses = Array(
+      "any([X|Xs],X,Xs).",
+      "any([X|Xs],E,[X|Ys]):-any(Xs,E,Ys).",
+      "permutation([],[]).",
+      "permutation(Xs,[X|Ys]):-any(Xs,X,Zs), permutation(Zs,Ys).")
+  )
+  def testMethodPredicatePermutations_C(list: List[String]): Iterable[List[String]]
 
 class TestPrologMethodImpl extends TestPrologMethod:
   def testMethodSignature_default(): Unit = ()
@@ -121,7 +141,11 @@ class TestPrologMethodImpl extends TestPrologMethod:
 
   def testMethodPredicateClauses_B(list: List[Int]): Iterable[Term] = null  // body of this method won't be used
 
-  def testMethodPredicatePermutations(list: List[Int]): Iterable[Term] = null  // body of this method won't be used
+  def testMethodPredicatePermutations_A(list: List[Int]): Iterable[Term] = null  // body of this method won't be used
+
+  def testMethodPredicatePermutations_B(list: List[Int]): Iterable[List[Int]] = null  // body of this method won't be used
+
+  def testMethodPredicatePermutations_C(list: List[String]): Iterable[List[String]] = null  // body of this method won't be used
 
 class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers with Logging:
 
@@ -282,13 +306,41 @@ class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers with Lo
   "PrologMethodInterceptor" should :
     "evaluate correctly the prolog predicate 'permutation(@X,-!Y)' generate the right goal 'permutation([1,2,3],Y)' and unify when compared " +
       "against theory 'any([X|Xs],X,Xs). any([X|Xs],E,[X|Ys]):-any(Xs,E,Ys). permutation([],[]). permutation(Xs,[X|Ys]):-any(Xs,X,Zs), permutation(Zs,Ys).' " +
-      "generating 6 solutions permutation([1,2,3],[1,2,3]), permutation([1,2,3],[1,3,2]), permutation([1,2,3],[2,1,3]), permutation([1,2,3],[2,3,1]), permutation([1,2,3],[3,1,2]), permutation([1,2,3],[3,2,1])" in :
+      "generating 6 solutions of type Term: permutation([1,2,3],[1,2,3]), permutation([1,2,3],[1,3,2]), permutation([1,2,3],[2,1,3]), permutation([1,2,3],[2,3,1]), permutation([1,2,3],[3,1,2]), permutation([1,2,3],[3,2,1])" in :
       val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
-      assert(proxy.testMethodPredicatePermutations(List(1, 2, 3)) === Iterable(
+      assert(proxy.testMethodPredicatePermutations_A(List(1, 2, 3)) === Iterable(
         Term.createTerm("permutation([1,2,3],[1,2,3])"),
         Term.createTerm("permutation([1,2,3],[1,3,2])"),
         Term.createTerm("permutation([1,2,3],[2,1,3])"),
         Term.createTerm("permutation([1,2,3],[2,3,1])"),
         Term.createTerm("permutation([1,2,3],[3,1,2])"),
         Term.createTerm("permutation([1,2,3],[3,2,1])")
+      ))
+
+  "PrologMethodInterceptor" should :
+    "evaluate correctly the prolog predicate 'permutation(@X,-!Y)' generate the right goal 'permutation([1,2,3],Y)' and unify when compared " +
+      "against theory 'any([X|Xs],X,Xs). any([X|Xs],E,[X|Ys]):-any(Xs,E,Ys). permutation([],[]). permutation(Xs,[X|Ys]):-any(Xs,X,Zs), permutation(Zs,Ys).' " +
+      "generating 6 solutions of type List[Int]: permutation([1,2,3],[1,2,3]), permutation([1,2,3],[1,3,2]), permutation([1,2,3],[2,1,3]), permutation([1,2,3],[2,3,1]), permutation([1,2,3],[3,1,2]), permutation([1,2,3],[3,2,1])" in :
+      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
+      assert(proxy.testMethodPredicatePermutations_B(List(1, 2, 3)) === List(
+        Term.createTerm("[1,2,3]"),
+        Term.createTerm("[1,3,2]"),
+        Term.createTerm("[2,1,3]"),
+        Term.createTerm("[2,3,1]"),
+        Term.createTerm("[3,1,2]"),
+        Term.createTerm("[3,2,1]")
+      ))
+
+  "PrologMethodInterceptor" should :
+    "1evaluate correctly the prolog predicate 'permutation(@X,-!Y)' generate the right goal 'permutation([1,2,3],Y)' and unify when compared " +
+      "against theory 'any([X|Xs],X,Xs). any([X|Xs],E,[X|Ys]):-any(Xs,E,Ys). permutation([],[]). permutation(Xs,[X|Ys]):-any(Xs,X,Zs), permutation(Zs,Ys).' " +
+      "generating 6 solutions of type List[String]: permutation([1,2,3],[1,2,3]), permutation([1,2,3],[1,3,2]), permutation([1,2,3],[2,1,3]), permutation([1,2,3],[2,3,1]), permutation([1,2,3],[3,1,2]), permutation([1,2,3],[3,2,1])" in :
+      val proxy = PrologMethodInterceptor.create(TestPrologMethodImpl().asInstanceOf[TestPrologMethod])
+      assert(proxy.testMethodPredicatePermutations_C(List("a","b","c")) === List(
+        Term.createTerm("[a,b,c]"),
+        Term.createTerm("[a,c,b]"),
+        Term.createTerm("[b,a,c]"),
+        Term.createTerm("[b,c,a]"),
+        Term.createTerm("[c,a,b]"),
+        Term.createTerm("[c,b,a]")
       ))
