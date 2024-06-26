@@ -68,7 +68,7 @@ class PrologMethodHandler(originalObject: Any) extends InvocationHandler with Lo
       val fields = PrologMethodUtils.extractMethodFields(prologMethodAnnotation)
 
       // set the theory and solve the goal using tuProlog
-      Scala2Prolog.setTheoryAndSolveGoal(fields, Option(args))
+      Scala2Prolog.setTheoryAndSolveGoal(fields, Option(args), method)
 
     // else, the method is not annotated with @PrologMethod, invoke the default method on the real object as if there was no proxy
     else

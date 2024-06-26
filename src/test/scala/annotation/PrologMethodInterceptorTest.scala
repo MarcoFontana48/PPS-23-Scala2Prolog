@@ -99,6 +99,15 @@ trait PrologMethodInterceptorDeclarationTest:
   )
   def testMethodPredicatePermutations_F(x: String, y: String, z: Double): Iterable[List[Int]]
 
+  @PrologMethod(
+    clauses = Array(
+      "point(3, 4).",
+      "point(-1, 2).",
+      "point(0, 0)."
+    )
+  )
+  def point(x: String, y: String): Iterable[List[Int]]
+
 class PrologMethodInterceptorDeclarationTestImpl extends PrologMethodInterceptorDeclarationTest:
 
   def PrologMethodInterceptor_notAnnotatedMethod_Int(a:Int, b:Int): Int =
@@ -135,6 +144,8 @@ class PrologMethodInterceptorDeclarationTestImpl extends PrologMethodInterceptor
   def testMethodPredicatePermutations_E(x: String, y: String, z: String): Iterable[Term] = null
   
   def testMethodPredicatePermutations_F(x: String, y: String, z: Double): Iterable[List[Int]] = null
+
+  def point(x: String, y: String): Iterable[List[Int]] = null
 
 class PrologMethodInterceptorTest extends AbstractAnnotationTest with Matchers with Logging:
   
@@ -262,4 +273,15 @@ class PrologMethodInterceptorTest extends AbstractAnnotationTest with Matchers w
       assert(proxy.testMethodPredicatePermutations_F("X", "Y", 1.0) === List(
         Term.createTerm("point(3.14,4.2,1.0)"),
         Term.createTerm("point(-1.0,2.67,1.0)")
+      ))
+
+  "PrologMethodInterceptor" should :
+    "intercept the @PrologMethod annotation and execute its logic, guessing and inferring missing fields and types " +
+      "correctly if not present when:" +
+      "clauses = Array(point(3, 4).,point(-1, 2).,point(0, 0).)" in :
+      val proxy = PrologMethodInterceptor.create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
+      assert(proxy.point("X", "Y") === List(
+        Term.createTerm("point(3,4)"),
+        Term.createTerm("point(-1,2)"),
+        Term.createTerm("point(0,0)")
       ))

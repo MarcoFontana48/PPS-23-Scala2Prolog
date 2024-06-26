@@ -5,6 +5,7 @@ import annotation.{Clauses, Predicate, PrologMethodEntity, PrologMethodFields, S
 import alice.tuprolog.{Prolog, SolveInfo, Term, Theory}
 import org.apache.logging.log4j.scala.Logging
 
+import java.lang.reflect.Method
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
@@ -18,9 +19,9 @@ object Scala2Prolog extends Logging:
    * @param fields a map containing the extracted values of method fields of the @PrologMethod annotation.
    * @return an Iterable containing the result of the goal
    */
-  def setTheoryAndSolveGoal(fields: PrologMethodFields, args: Option[Array[AnyRef]]): Iterable[AnyRef] =
+  def setTheoryAndSolveGoal(fields: PrologMethodFields, args: Option[Array[AnyRef]], method: Method): Iterable[AnyRef] =
     val rules = generateRules(fields)
-    val goal = generateGoal(fields, args)
+    val goal = generateGoal(fields, args, method)
     val solutions = computeAllSolutions(rules, goal)
     formatOutput(fields, solutions)
 
@@ -42,7 +43,7 @@ object Scala2Prolog extends Logging:
    * @param args   an optional array containing the arguments of the method annotated with @PrologMethod.
    * @return a Term containing the goal to solve.
    */
-  private def generateGoal(fields: PrologMethodFields, args: Option[Array[AnyRef]]): Term =
+  private def generateGoal(fields: PrologMethodFields, args: Option[Array[AnyRef]], method: Method): Term =
     /**
      * Method to replace the input variables of the predicate with the input values of the method annotated
      * with @PrologMethod.
@@ -68,9 +69,7 @@ object Scala2Prolog extends Logging:
      * @param variable a string that represents the input variable of the predicate.
      * @return a string that represents the pattern of the predicate variable notation.
      */
-    def getPredicateVariableNotationPattern(variable: String) = {
-      s"'[-|+]'\\($variable\\)"
-    }
+    def getPredicateVariableNotationPattern(variable: String) = s"'[-|+]'\\($variable\\)"
 
     /**
      * Method to get the pattern of the predicate variable standard notation.
@@ -78,9 +77,7 @@ object Scala2Prolog extends Logging:
      *
      * @return a string that represents the pattern of the predicate variable standard notation.
      */
-    def getPredicateVariableStandardPattern = {
-      s"[A-Z]\\w*"
-    }
+    def getPredicateVariableStandardPattern = s"[A-Z]\\w*"
 
     /**
      * Method to replace the input variables of the predicate with the input values of the method annotated
@@ -94,26 +91,55 @@ object Scala2Prolog extends Logging:
      */
     @tailrec
     def replaceTermsHelper(vars: List[String])(values: List[AnyRef])(acc: String): String =
+      logger.trace(s"current accumulator: '$acc'")
       (vars, values) match
         case (varHead :: varTail, valueHead :: valueTail) =>  replaceTermsHelper(varTail)(valueTail)(acc.replaceFirst(getPredicateVariableNotationPattern(varHead), replaceVariableNotationPatternWithValue(varHead)(valueHead)))
         case (varHead :: varTail, Nil) =>                     replaceTermsHelper  (varTail)(values) (acc.replaceFirst(getPredicateVariableNotationPattern(varHead), varHead))
         case (Nil, valueHead :: valueTail) =>                 replaceTermsHelper  (vars)(valueTail) (acc.replaceFirst(getPredicateVariableStandardPattern, replaceVariableNotationPatternWithValue("Nil")(valueHead)))
         case (Nil, Nil) => acc
 
-    // convert term to string
-    val termStr = fields("predicate").getOrElse(Predicate("")).asInstanceOf[Predicate].term.toString
-    logger.trace(s"predicate term as string: '$termStr'")
+    /**
+     * Extracts the goal from the predicate field of the @PrologMethod annotation.
+     *
+     * @param value a PrologMethodEntity that represents the predicate field of the @PrologMethod annotation.
+     * @return a Term that represents the goal to solve.
+     */
+    def extractGoal(value: PrologMethodEntity, argsList: List[AnyRef]) =
+      // convert term to string
+      val termStr = value.asInstanceOf[Predicate].term.toString
+      logger.trace(s"predicate term as string: '$termStr'")
 
-    // extract variables from term. The predicate notation is represented as concatenation of operator and term, since
-    // the input variable has tuProlog type Term: i.e.: '+'(V) )
-    val variablePattern = "'[-|+]?'\\(([A-Z]\\w*)\\)".r
-    val variables = variablePattern.findAllMatchIn(termStr).toList.map(_.group(1))
-    logger.trace(s"extracted variables from term: '${variables.mkString("List(", ", ", ")")}'")
+      // extract variables from term. The predicate notation is represented as concatenation of operator and term, since
+      // the input variable has tuProlog type Term: i.e.: '+'(V) )
+      val variablePattern = "'[-|+]?'\\(([A-Z]\\w*)\\)".r
+      val variables = variablePattern.findAllMatchIn(termStr).toList.map(_.group(1))
+      logger.trace(s"extracted variables from term: '${variables.mkString("List(", ", ", ")")}'")
 
-    // replace variables with values
-    val replacedTermStr = replaceTermsHelper(variables)(args.getOrElse(Array.empty[AnyRef]).toList)(termStr)
-    logger.trace(s"replaced term: '$replacedTermStr'")
-    Term.createTerm(replacedTermStr)
+      // replace variables with values
+      val replacedTermStr = replaceTermsHelper(variables)(argsList)(termStr)
+      logger.trace(s"replaced term: '$replacedTermStr'")
+      Term.createTerm(replacedTermStr)
+
+    /**
+     * Guesses the goal from the arguments of the method annotated with @PrologMethod.
+     *
+     * @param argsList a list that contains the arguments of the method annotated with @PrologMethod.
+     * @return a Term that represents the guessed goal to solve.
+     */
+    def guessGoal(argsList: List[AnyRef], method: Method): Term =
+      val argsListStr = method.getName + argsList.mkString("(", ",", ")")
+      logger.trace(s"guessing goal: '$argsListStr'")
+      Term.createTerm(argsListStr)
+
+    // method body
+    val argsList = args.getOrElse(Array.empty[AnyRef]).toList
+    fields("predicate") match
+      case Some(value) =>
+        logger.trace("extracting goal from predicate field of @PrologMethod annotation...")
+        extractGoal(value, argsList)
+      case None =>
+        logger.trace("predicate field is empty, guessing goal from method arguments and name...")
+        guessGoal(argsList, method)
 
   /**
    * Computes all solutions of a goal in Prolog.
@@ -170,9 +196,12 @@ object Scala2Prolog extends Logging:
     val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
 
     (typesOption, signaturesOption) match
+      // if both types and signatures are present, return the results based on the output variables types
       case (Some(types), Some(signatures)) =>
+        // get the last input variable index
         val lastInputVarIndex = signatures.inputVars.length - 1
 
+        // check if all output types are lists, if so return the results as List
         val listContentPattern = "List\\[(.*)]".r
         val outputTypes = signatures.outputVars.indices.map(idx => types.values(lastInputVarIndex + idx + 1))
 
