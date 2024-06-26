@@ -17,6 +17,8 @@ object Scala2Prolog extends Logging:
    * Sets a theory and solves a goal in Prolog.
    *
    * @param fields a map containing the extracted values of method fields of the @PrologMethod annotation.
+   * @param args   an optional array containing the arguments of the method annotated with @PrologMethod.
+   * @param method a Method that represents the method annotated with @PrologMethod.
    * @return an Iterable containing the result of the goal
    */
   def setTheoryAndSolveGoal(fields: PrologMethodFields, args: Option[Array[AnyRef]], method: Method): Iterable[AnyRef] =
@@ -41,6 +43,7 @@ object Scala2Prolog extends Logging:
    *
    * @param fields a map containing the extracted values of method fields of the @PrologMethod annotation.
    * @param args   an optional array containing the arguments of the method annotated with @PrologMethod.
+   * @param method a Method that represents the method annotated with @PrologMethod.
    * @return a Term containing the goal to solve.
    */
   private def generateGoal(fields: PrologMethodFields, args: Option[Array[AnyRef]], method: Method): Term =
@@ -102,6 +105,7 @@ object Scala2Prolog extends Logging:
      * Extracts the goal from the predicate field of the @PrologMethod annotation.
      *
      * @param value a PrologMethodEntity that represents the predicate field of the @PrologMethod annotation.
+     * @param argsList a list that contains the arguments of the method annotated with @PrologMethod.
      * @return a Term that represents the goal to solve.
      */
     def extractGoal(value: PrologMethodEntity, argsList: List[AnyRef]) =
@@ -121,9 +125,10 @@ object Scala2Prolog extends Logging:
       Term.createTerm(replacedTermStr)
 
     /**
-     * Guesses the goal from the arguments of the method annotated with @PrologMethod.
+     * Guesses the goal from the arguments of the method and the method name annotated with @PrologMethod.
      *
      * @param argsList a list that contains the arguments of the method annotated with @PrologMethod.
+     * @param method a Method that represents the method annotated with @PrologMethod.
      * @return a Term that represents the guessed goal to solve.
      */
     def guessGoal(argsList: List[AnyRef], method: Method): Term =

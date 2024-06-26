@@ -4,8 +4,6 @@ package annotation
 import alice.tuprolog.*
 import org.apache.logging.log4j.scala.Logging
 
-import scala.annotation.tailrec
-
 /**
  * sealed trait that represents only the entities that can be extracted from the @PrologMethod annotation.
  */
@@ -83,7 +81,7 @@ object Signature extends PrologMethodEntity with Logging:
         case None =>
           throw new IllegalArgumentException(s"Invalid signature format: '$param'. Signature must be formatted as '(X1,X2,..Xn) -> {Y1,Y2,..Yn}'")
     })
-    
+
 /**
  * Case class that represents the 'types' method field of the @PrologMethod annotation.
  *
