@@ -132,7 +132,14 @@ object Scala2Prolog extends Logging:
      * @return a Term that represents the guessed goal to solve.
      */
     def guessGoal(argsList: List[AnyRef], method: Method): Term =
-      val argsListStr = method.getName + argsList.mkString("(", ",", ")")
+      // checks if argsList has 'List(...)' elements and formats them as '[...]' instead, otherwise leaves them as they are
+      val formattedArgs = argsList.map {
+        case list: List[_] => list.mkString("[", ",", "]") // format List elements
+        case other => other.toString
+      }
+
+      // builds the goal as 'methodName(methodArg1,...,methodArgN)'
+      val argsListStr = method.getName + formattedArgs.mkString("(", ",", ")")
       logger.trace(s"guessing goal: '$argsListStr'")
       Term.createTerm(argsListStr)
 
