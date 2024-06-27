@@ -18,11 +18,11 @@ object PrologHandlerManager extends PrologManager:
   def apply(originalObject: Any): InvocationHandler =
     if originalObject.getClass.isAnnotationPresent(classOf[PrologClass]) then
       logger.trace(s"originalObject '$originalObject' is annotated with @PrologClass, extracting its clauses...")
-      val prologClassTheory = originalObject.getClass.getAnnotation(classOf[PrologClass]).clauses()
-      new PrologHandlerManager(prologClassTheory, originalObject)
+      val maybeClauses = PrologClassHandler.extractClauses(originalObject.getClass.getAnnotation(classOf[PrologClass]))
+      new PrologHandlerManager(maybeClauses, originalObject)
     else
       logger.trace(s"originalObject '$originalObject' is not annotated with @PrologClass, creating a new Prolog engine...")
-      new PrologHandlerManager(null, originalObject)
+      new PrologHandlerManager(Option.empty, originalObject)
 
 /**
  * Handler for an object that intercepts any method call for methods annotated with @PrologMethod inside the
@@ -31,7 +31,7 @@ object PrologHandlerManager extends PrologManager:
  *
  * @param originalObject the original object, methods calls of this object annotated with @PrologMethod are intercepted
  */
-class PrologHandlerManager(classClauses: Array[String], originalObject: Any) extends InvocationHandler with PrologManager:
+class PrologHandlerManager(classClauses: Option[Clauses], originalObject: Any) extends InvocationHandler with PrologManager:
   /**
    * Intercepts the method call of the proxy instance and executes the logic of the annotated @PrologMethod method
    * instead of the original method body.

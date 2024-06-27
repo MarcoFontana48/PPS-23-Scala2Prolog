@@ -13,7 +13,7 @@ type PrologAnnotationFields = Map[String, Option[PrologEntity]]
  * handle the methods annotated with @PrologMethod.
  */
 object PrologMethodHandler:
-  def apply(classClauses: Array[String]): PrologMethodHandler = new PrologMethodHandler(classClauses)
+  def apply(classClauses: Option[Clauses]): PrologMethodHandler = new PrologMethodHandler(classClauses)
 
 /**
  * Utility object to extract and parse the fields of @PrologMethod annotations.
@@ -74,7 +74,7 @@ abstract class PrologMethodUtils
   override def extractSignature(prologMethod: PrologMethod): Option[Signature] =
     Signature(prologMethod.signature())
 
-class PrologMethodHandler(classClauses: Array[String]) extends PrologMethodUtils with PrologAnnotationExecutor:
+class PrologMethodHandler(classClauses: Option[Clauses]) extends PrologMethodUtils with PrologAnnotationExecutor:
   /**
    * Executes the @PrologMethod annotation, by extracting its method fields and the annotated method's arguments and
    * parsing them to extract and query its theory.
@@ -225,15 +225,20 @@ class PrologMethodHandler(classClauses: Array[String]) extends PrologMethodUtils
    * @return an Iterable containing all the results of the goal
    */
   private def computeAllSolutions(rules: String, goal: Term): Iterable[SolveInfo] =
-    //define prolog engine and set its theory as concatenation of @PrologClass clauses and @PrologMethod clauses
-    //TODO: take into account the fact that @PrologMethods can be executed on their own and no prolog class may exist
     val engine = Prolog()
 
-    val classClausesStr = classClauses.mkString("", " ", " ")
-    val theory = classClausesStr + rules
-    logger.trace(s"concatenation of @PrologClass clauses '$classClausesStr' with @PrologMethod rules '$rules' to set " +
-      s"new theory into the engine: '$theory'...")
-    engine.setTheory(Theory(theory))
+    // if @PrologClass clauses is defined, set prolog engine's theory as concatenation of @PrologClass clauses and
+    // @PrologMethod clauses.
+    // otherwise set only @PrologMethod clauses into the engine
+    if classClauses.isDefined then
+      val classClausesStr = classClauses.get.value.mkString("", " ", " ")
+      val theory = classClausesStr + rules
+      logger.trace(s"concatenation of @PrologClass clauses '$classClausesStr' with @PrologMethod rules '$rules' to set " +
+        s"new theory into the engine: '$theory'...")
+      engine.setTheory(Theory(theory))
+    else
+      logger.trace(s"no @PrologClass clauses found, setting only @PrologMethod rules into the engine: '$rules'...")
+      engine.setTheory(Theory(rules))
 
     // Compute the goal solutions
     // - get the first solution
