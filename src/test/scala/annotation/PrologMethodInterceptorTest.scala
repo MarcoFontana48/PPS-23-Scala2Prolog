@@ -193,7 +193,7 @@ class PrologMethodInterceptorDeclarationTestImpl extends PrologMethodInterceptor
 class PrologMethodInterceptorTest extends AbstractAnnotationTest with Matchers with Logging:
 
   import Term.createTerm
-  import PrologMethodInterceptor.create
+  import PrologInterceptor.create
 
   "PrologMethodInterceptor" should :
     "run methods not annotated with @PrologMethod as usual" in :

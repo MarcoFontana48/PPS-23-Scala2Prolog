@@ -78,9 +78,9 @@ class PrologMethodUtilsDeclarationTestImpl extends PrologMethodUtilsDeclarationT
 
   def testMethodPredicate_IO(): Unit = ()
 
-class PrologMethodUtilsTest extends AbstractAnnotationTest with Matchers with Logging:
+class PrologMethodHandlerTest extends AbstractAnnotationTest with Matchers with Logging:
 
-  import PrologMethodUtils.*
+  import PrologMethodHandler.*
 
   /* @PrologMethod method field 'signature' tests */
 
