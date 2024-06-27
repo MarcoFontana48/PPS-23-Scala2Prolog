@@ -2,13 +2,12 @@ package pps.exam.application
 package annotation
 
 import alice.tuprolog.{Prolog, SolveInfo, Term, Theory}
-import org.apache.logging.log4j.scala.Logging
 
 import java.lang.reflect.Method
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
-type PrologMethodFields = Map[String, Option[PrologMethodEntity]]
+type PrologAnnotationFields = Map[String, Option[PrologEntity]]
 
 /**
  * handle the methods annotated with @PrologMethod.
@@ -19,14 +18,19 @@ object PrologMethodHandler:
 /**
  * Utility object to extract and parse the fields of @PrologMethod annotations.
  */
-abstract class PrologMethodUtils extends PrologAnnotationUtils[PrologMethod, PrologMethodFields] with Logging:
+abstract class PrologMethodUtils
+  extends PrologExtractorUtils[PrologMethod, PrologAnnotationFields]
+  with SignatureExtractor[PrologMethod]
+  with PredicateExtractor[PrologMethod]
+  with ClausesExtractor[PrologMethod]
+  with TypesExtractor[PrologMethod]:
   /**
    * Method to extract and parse the fields of @PrologMethod annotations.
    *
    * @param prologMethod a @PrologMethod annotation.
    * @return a Map that contains the extracted and parsed method fields of the @PrologMethod annotation
    */
-  override def extractMethodFields(prologMethod: PrologMethod): PrologMethodFields =
+  override def extractMethodFields(prologMethod: PrologMethod): PrologAnnotationFields =
     Map(
       "signatures" -> extractSignature(prologMethod),
       "predicate" -> extractPredicate(prologMethod),
@@ -40,7 +44,7 @@ abstract class PrologMethodUtils extends PrologAnnotationUtils[PrologMethod, Pro
    * @param prologMethod a @PrologMethod annotation.
    * @return an Option of 'Predicate' that contains informations about the predicate method field
    */
-  def extractPredicate(prologMethod: PrologMethod): Option[Predicate] =
+  override def extractPredicate(prologMethod: PrologMethod): Option[Predicate] =
     Predicate(prologMethod.predicate())
 
   /**
@@ -49,7 +53,7 @@ abstract class PrologMethodUtils extends PrologAnnotationUtils[PrologMethod, Pro
    * @param prologMethod a @PrologMethod annotation.
    * @return an Option of 'Clauses' that contains informations about the clauses method field
    */
-  def extractClauses(prologMethod: PrologMethod): Option[Clauses] =
+  override def extractClauses(prologMethod: PrologMethod): Option[Clauses] =
     Clauses(prologMethod.clauses())
 
   /**
@@ -58,7 +62,7 @@ abstract class PrologMethodUtils extends PrologAnnotationUtils[PrologMethod, Pro
    * @param prologMethod a @PrologMethod annotation.
    * @return an Option of 'Types' that contains informations about the types method field
    */
-  def extractTypes(prologMethod: PrologMethod): Option[Types] =
+  override def extractTypes(prologMethod: PrologMethod): Option[Types] =
     Types(prologMethod.types())
 
   /**
@@ -67,10 +71,10 @@ abstract class PrologMethodUtils extends PrologAnnotationUtils[PrologMethod, Pro
    * @param prologMethod a @PrologMethod annotation.
    * @return an Option of 'Signature' that contains informations about the signature method field
    */
-  def extractSignature(prologMethod: PrologMethod): Option[Signature] =
+  override def extractSignature(prologMethod: PrologMethod): Option[Signature] =
     Signature(prologMethod.signature())
 
-class PrologMethodHandler(classClauses: Array[String]) extends PrologMethodUtils with PrologAnnotationHandler with Logging:
+class PrologMethodHandler(classClauses: Array[String]) extends PrologMethodUtils with PrologAnnotationExecutor:
   /**
    * Executes the @PrologMethod annotation, by extracting its method fields and the annotated method's arguments and
    * parsing them to extract and query its theory.
@@ -94,7 +98,7 @@ class PrologMethodHandler(classClauses: Array[String]) extends PrologMethodUtils
    * @param fields a map containing the extracted values of method fields of the @PrologMethod annotation.
    * @return a string containing the clauses to set as theory.
    */
-  private def generateRules(fields: PrologMethodFields): String =
+  private def generateRules(fields: PrologAnnotationFields): String =
     fields.get("clauses").flatten match
       case Some(clauses: Clauses) => clauses.value.mkString(" ")
       case _ => throw new Exception("Failed to extract clauses or clauses are not of type Clauses")
@@ -107,7 +111,7 @@ class PrologMethodHandler(classClauses: Array[String]) extends PrologMethodUtils
    * @param method a Method that represents the method annotated with @PrologMethod.
    * @return a Term containing the goal to solve.
    */
-  private def generateGoal(fields: PrologMethodFields, args: Option[Array[AnyRef]], method: Method): Term =
+  private def generateGoal(fields: PrologAnnotationFields, args: Option[Array[AnyRef]], method: Method): Term =
     /**
      * Method to replace the input variables of the predicate with the input values of the method annotated
      * with @PrologMethod.
@@ -169,7 +173,7 @@ class PrologMethodHandler(classClauses: Array[String]) extends PrologMethodUtils
      * @param argsList a list that contains the arguments of the method annotated with @PrologMethod.
      * @return a Term that represents the goal to solve.
      */
-    def extractGoal(value: PrologMethodEntity, argsList: List[AnyRef]) =
+    def extractGoal(value: PrologEntity, argsList: List[AnyRef]) =
       // convert term to string
       val termStr = value.asInstanceOf[Predicate].term.toString
       logger.trace(s"predicate term as string: '$termStr'")
@@ -266,7 +270,7 @@ class PrologMethodHandler(classClauses: Array[String]) extends PrologMethodUtils
    * @param solveInfos an Iterable containing the solutions of the goal.
    * @return an Iterable (or the return type specified in the annotation) containing the solutions.
    */
-  private def formatOutput(fields: PrologMethodFields, solveInfos: Iterable[SolveInfo]): Iterable[AnyRef] =
+  private def formatOutput(fields: PrologAnnotationFields, solveInfos: Iterable[SolveInfo]): Iterable[AnyRef] =
     val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
     val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
 
