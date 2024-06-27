@@ -76,7 +76,9 @@ abstract class PrologMethodUtils
   override def extractSignature(prologMethod: PrologMethod): Option[Signature] =
     Signature(prologMethod.signature())
 
-class PrologMethodHandler(classClauses: Option[Clauses]) extends PrologMethodUtils with PrologAnnotationExecutor:
+class PrologMethodHandler(classClauses: Option[Clauses])
+  extends PrologMethodUtils
+  with PrologAnnotationExecutor:
   /**
    * Executes the @PrologMethod annotation, by extracting its method fields and the annotated method's arguments and
    * parsing them to extract and query its theory.
@@ -89,10 +91,10 @@ class PrologMethodHandler(classClauses: Option[Clauses]) extends PrologMethodUti
     // extracts the fields of the @PrologMethod annotation, then set the theory and solve the goal using tuProlog
     val prologMethodAnnotation = method.getAnnotation(classOf[PrologMethod])
     val fields = extractMethodFields(prologMethodAnnotation)
-    val rules = generateRules(fields)
-    val goal = generateGoal(fields, Option(args), method)
+    val rules = fields.generateRules
+    val goal = fields.generateGoal(Option(args), method)
     val solutions = computeAllSolutions(rules, goal)
-    formatOutput(fields, solutions)
+    fields formatOutput solutions
 
   /**
    * Generates rules from the extracted fields of the @PrologMethod annotation.
@@ -100,7 +102,7 @@ class PrologMethodHandler(classClauses: Option[Clauses]) extends PrologMethodUti
    * @param fields a map containing the extracted values of method fields of the @PrologMethod annotation.
    * @return a string containing the clauses to set as theory.
    */
-  private def generateRules(fields: PrologAnnotationFields): String =
+  extension (fields: PrologAnnotationFields) private def generateRules: String =
     fields.get("clauses").flatten match
       case Some(clauses: Clauses) => clauses.value.mkString(" ")
       case _ => throw new Exception("Failed to extract clauses or clauses are not of type Clauses")
@@ -113,7 +115,7 @@ class PrologMethodHandler(classClauses: Option[Clauses]) extends PrologMethodUti
    * @param method a Method that represents the method annotated with @PrologMethod.
    * @return a Term containing the goal to solve.
    */
-  private def generateGoal(fields: PrologAnnotationFields, args: Option[Array[AnyRef]], method: Method): Term =
+  extension (fields: PrologAnnotationFields) private def generateGoal(args: Option[Array[AnyRef]], method: Method): Term =
     /**
      * Method to replace the input variables of the predicate with the input values of the method annotated
      * with @PrologMethod.
@@ -163,9 +165,9 @@ class PrologMethodHandler(classClauses: Option[Clauses]) extends PrologMethodUti
     def replaceTermsHelper(vars: List[String])(values: List[AnyRef])(acc: String): String =
       logger.trace(s"current accumulator: '$acc'")
       (vars, values) match
-        case (varHead :: varTail, valueHead :: valueTail) => replaceTermsHelper(varTail)(valueTail)(acc.replaceFirst(getPredicateVariableNotationPattern(varHead), replaceVariableNotationPatternWithValue(varHead)(valueHead)))
-        case (varHead :: varTail, Nil) => replaceTermsHelper(varTail)(values)(acc.replaceFirst(getPredicateVariableNotationPattern(varHead), varHead))
-        case (Nil, valueHead :: valueTail) => replaceTermsHelper(vars)(valueTail)(acc.replaceFirst(getPredicateVariableStandardPattern, replaceVariableNotationPatternWithValue("Nil")(valueHead)))
+        case (varHead :: varTail, valueHead :: valueTail) =>  replaceTermsHelper(varTail)(valueTail)(acc.replaceFirst(getPredicateVariableNotationPattern(varHead), replaceVariableNotationPatternWithValue(varHead)(valueHead)))
+        case (varHead :: varTail, Nil) =>                     replaceTermsHelper (varTail)(values)  (acc.replaceFirst(getPredicateVariableNotationPattern(varHead), varHead))
+        case (Nil, valueHead :: valueTail) =>                 replaceTermsHelper (vars)(valueTail)  (acc.replaceFirst(getPredicateVariableStandardPattern, replaceVariableNotationPatternWithValue("Nil")(valueHead)))
         case (Nil, Nil) => acc
 
     /**
@@ -285,7 +287,7 @@ class PrologMethodHandler(classClauses: Option[Clauses]) extends PrologMethodUti
    * @param solveInfos an Iterable containing the solutions of the goal.
    * @return an Iterable (or the return type specified in the annotation) containing the solutions.
    */
-  private def formatOutput(fields: PrologAnnotationFields, solveInfos: Iterable[SolveInfo]): Iterable[AnyRef] =
+  extension (fields: PrologAnnotationFields) private def formatOutput (solveInfos: Iterable[SolveInfo]): Iterable[AnyRef] =
     val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
     val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
 

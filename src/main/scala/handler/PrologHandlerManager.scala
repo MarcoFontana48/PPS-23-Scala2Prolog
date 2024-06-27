@@ -3,7 +3,6 @@ package handler
 
 import annotation.*
 
-import alice.tuprolog.{Prolog, Theory}
 import org.apache.logging.log4j.scala.Logging
 
 import java.lang.reflect.{InvocationHandler, Method}
@@ -38,7 +37,9 @@ object PrologHandlerManager extends PrologManager:
  *
  * @param originalObject the original object, methods calls of this object annotated with @PrologMethod are intercepted
  */
-class PrologHandlerManager(classClauses: Option[Clauses], originalObject: Any) extends InvocationHandler with PrologManager:
+class PrologHandlerManager(classClauses: Option[Clauses], originalObject: Any)
+  extends InvocationHandler
+  with PrologManager:
   /**
    * Intercepts the method call of the proxy instance and executes the logic of the annotated @PrologMethod method
    * instead of the original method body.
