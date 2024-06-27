@@ -6,9 +6,9 @@ import org.apache.logging.log4j.scala.Logging
 import java.lang.reflect.Proxy
 
 /**
- * Trait to mixin to give the extended class the property to create a Proxy of an object
+ * Trait to mixin to give the extended class the property to create a Proxy of an object to intercept method calls
  */
-trait Interceptor:
+trait Interceptor extends Logging:
   /**
    * Creates a Proxy instance of the original object passed as argument that is returned to the caller.
    * Each time the proxy instance is invoked, it will intercept the call and execute its logic.
@@ -22,7 +22,7 @@ trait Interceptor:
 /**
  * Module that contains methods to intercept call of methods annotated with @PrologMethod an execute their logic
  */
-object PrologInterceptor extends Logging with Interceptor:
+object PrologInterceptor extends Interceptor:
   /**
    * Creates a Proxy instance of the original object passed as argument that is returned to the caller.
    * Each time the proxy instance is invoked, it will intercept the method call and execute the annotated @PrologMethod

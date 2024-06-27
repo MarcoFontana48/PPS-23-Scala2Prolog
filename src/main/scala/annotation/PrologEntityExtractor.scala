@@ -1,6 +1,9 @@
 package pps.exam.application
 package annotation
 
+/**
+ * trait that represents annotation's method fields extractors.
+ */
 trait PrologEntityExtractor extends S2PHandler
 
 /**
@@ -18,14 +21,34 @@ abstract class PrologExtractorUtils[A, +B] extends PrologEntityExtractor:
    */
   def extractMethodFields(annotation: A): B
 
+/**
+ * trait provides the property to extract the clauses from the annotation.
+ *
+ * @tparam A the type of the annotation.
+ */
 trait ClausesExtractor[A] extends PrologEntityExtractor:
   def extractClauses(annotation: A): Option[Clauses]
 
+/**
+ * trait provides the property to extract the predicate from the annotation.
+ *
+ * @tparam A the type of the annotation.
+ */
 trait PredicateExtractor[A] extends PrologEntityExtractor:
   def extractPredicate(annotation: A): Option[Predicate]
 
+/**
+ * trait provides the property to extract the signature from the annotation.
+ *
+ * @tparam A the type of the annotation.
+ */
 trait SignatureExtractor[A] extends PrologEntityExtractor:
   def extractSignature(annotation: A): Option[Signature]
 
+/**
+ * trait provides the property to extract the types from the annotation.
+ *
+ * @tparam A the type of the annotation.
+ */
 trait TypesExtractor[A] extends PrologEntityExtractor:
   def extractTypes(annotation: A): Option[Types]

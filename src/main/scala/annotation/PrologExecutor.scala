@@ -8,7 +8,7 @@ import java.lang.reflect.Method
 trait PrologExecutor extends S2PHandler
 
 /**
- * trait that gives the superclass the ability to execute the prolog annotation logic
+ * trait that gives the superclass the ability to execute the prolog annotation logic using tuProlog engine
  */
 trait PrologAnnotationExecutor extends PrologExecutor:
   def executeAnnotation(method: Method, args: Array[AnyRef]): AnyRef

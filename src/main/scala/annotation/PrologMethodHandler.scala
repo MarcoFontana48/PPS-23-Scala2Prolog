@@ -227,18 +227,26 @@ class PrologMethodHandler(classClauses: Option[Clauses]) extends PrologMethodUti
   private def computeAllSolutions(rules: String, goal: Term): Iterable[SolveInfo] =
     val engine = Prolog()
 
-    // if @PrologClass clauses is defined, set prolog engine's theory as concatenation of @PrologClass clauses and
-    // @PrologMethod clauses.
-    // otherwise set only @PrologMethod clauses into the engine
-    if classClauses.isDefined then
-      val classClausesStr = classClauses.get.value.mkString("", " ", " ")
-      val theory = classClausesStr + rules
-      logger.trace(s"concatenation of @PrologClass clauses '$classClausesStr' with @PrologMethod rules '$rules' to set " +
-        s"new theory into the engine: '$theory'...")
-      engine.setTheory(Theory(theory))
-    else
-      logger.trace(s"no @PrologClass clauses found, setting only @PrologMethod rules into the engine: '$rules'...")
-      engine.setTheory(Theory(rules))
+    /**
+     * Sets prolog engine's theory based on the extracted fields of the @PrologMethod annotation and optionally
+     * the @PrologClass annotation.
+     * If the @PrologClass annotation is present, it concatenates the clauses of the @PrologClass annotation with the
+     * rules of the @PrologMethod annotation to set the theory into the engine.
+     * Otherwise, it sets only the rules of the @PrologMethod annotation into the engine.
+     */
+    def setEngineTheory(): Unit = {
+      if classClauses.isDefined then
+        val classClausesStr = classClauses.get.value.mkString("", " ", " ")
+        val theory = classClausesStr + rules
+        logger.trace(s"concatenation of @PrologClass clauses '$classClausesStr' with @PrologMethod rules '$rules' to " +
+          s"set new theory into the engine: '$theory'...")
+        engine.setTheory(Theory(theory))
+      else
+        logger.trace(s"no @PrologClass clauses found, setting only @PrologMethod rules into the engine: '$rules'...")
+        engine.setTheory(Theory(rules))
+    }
+
+    setEngineTheory()
 
     // Compute the goal solutions
     // - get the first solution
