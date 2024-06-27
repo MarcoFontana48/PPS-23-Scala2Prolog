@@ -1,4 +1,4 @@
 package pps.exam.application
-package annotation
+package handler
 
 abstract class AbstractAnnotationTest extends AbstractTest

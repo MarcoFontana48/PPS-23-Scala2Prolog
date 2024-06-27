@@ -1,5 +1,8 @@
 package pps.exam.application
-package annotation
+package interceptor
+
+import annotation.PrologMethod
+import handler.AbstractAnnotationTest
 
 import alice.tuprolog.Term
 import org.apache.logging.log4j.scala.Logging
@@ -192,8 +195,8 @@ class PrologMethodInterceptorDeclarationTestImpl extends PrologMethodInterceptor
 
 class PrologMethodInterceptorTest extends AbstractAnnotationTest with Matchers with Logging:
 
-  import Term.createTerm
   import PrologInterceptor.create
+  import Term.createTerm
 
   "PrologMethodInterceptor" should :
     "run methods not annotated with @PrologMethod as usual" in :

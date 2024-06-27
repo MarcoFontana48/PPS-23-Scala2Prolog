@@ -1,5 +1,5 @@
 package pps.exam.application
-package annotation
+package handler
 
 import alice.tuprolog.Prolog
 

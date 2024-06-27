@@ -1,5 +1,7 @@
 package pps.exam.application
-package annotation
+package handler
+
+import annotation.*
 
 import alice.tuprolog.{Prolog, SolveInfo, Term, Theory}
 

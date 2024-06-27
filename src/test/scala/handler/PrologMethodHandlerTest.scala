@@ -1,7 +1,8 @@
 package pps.exam.application
-package annotation
+package handler
 
-import alice.tuprolog.Prolog
+import annotation.*
+
 import org.apache.logging.log4j.scala.Logging
 import org.scalatest.matchers.should.Matchers
 

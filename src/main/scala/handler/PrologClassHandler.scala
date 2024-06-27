@@ -1,10 +1,12 @@
 package pps.exam.application
-package annotation
+package handler
+
+import annotation.PrologClass
 
 /**
  * handle the methods annotated with @PrologClass.
  */
-object PrologClassHandler extends PrologClassUtils with S2PHandler
+object PrologClassHandler extends PrologClassUtils
 
 /**
  * utility methods to extract and parse the fields of an annotation.

@@ -1,6 +1,6 @@
 package pps.exam.application
 
-import annotation.PrologInterceptor
+import interceptor.PrologInterceptor
 
 import org.apache.logging.log4j.scala.Logging
 
