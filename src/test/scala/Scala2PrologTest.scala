@@ -11,15 +11,16 @@ class Scala2PrologTest extends AbstractTest {
       val prologResultA = proxy.methodA("X")
       val prologResultB = proxy.methodB("X")
 
-      assert(prologResultB === Iterable(
-        Term.createTerm("methodB(c)"),
-        Term.createTerm("methodB(b)")
-      ))
-
-      assert(prologResultA === Iterable(
-        Term.createTerm("methodA(c)"),
-        Term.createTerm("methodA(a)")
-      ))
+      assert((prologResultB, prologResultA) === (
+        Iterable(
+          Term.createTerm("methodB(c)"),
+          Term.createTerm("methodB(b)")
+        ),
+        Iterable(
+          Term.createTerm("methodA(c)"),
+          Term.createTerm("methodA(a)")
+        ))
+      )
     }
   }
 }
