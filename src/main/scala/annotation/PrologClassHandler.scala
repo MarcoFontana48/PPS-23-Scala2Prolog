@@ -1,8 +1,7 @@
 package pps.exam.application
 package annotation
 
-object PrologClassHandler:
-  def apply(): PrologClassHandler = new PrologClassHandler()
+object PrologClassHandler extends PrologClassUtils with S2PHandler
 
 abstract class PrologClassUtils extends PrologExtractorUtils[PrologClass, PrologAnnotationFields] with ClausesExtractor[PrologClass]:
   override def extractMethodFields(prologClass: PrologClass): PrologAnnotationFields =
@@ -12,5 +11,3 @@ abstract class PrologClassUtils extends PrologExtractorUtils[PrologClass, Prolog
 
   override def extractClauses(prologClass: PrologClass): Option[Clauses] =
     Clauses(prologClass.clauses())
-
-class PrologClassHandler extends PrologClassUtils with S2PHandler

@@ -1,9 +1,7 @@
 package pps.exam.application
 package annotation
 
-import org.apache.logging.log4j.scala.Logging
-
-trait PrologEntityExtractor extends Logging
+trait PrologEntityExtractor extends S2PHandler
 
 /**
  * abstract class that represents the utility methods to extract and parse annotations.
@@ -19,7 +17,7 @@ abstract class PrologExtractorUtils[A, +B] extends PrologEntityExtractor:
    * @return a generic type +B that contains the extracted and parsed fields of the annotation
    */
   def extractMethodFields(annotation: A): B
-  
+
 trait ClausesExtractor[A] extends PrologEntityExtractor:
   def extractClauses(annotation: A): Option[Clauses]
 
