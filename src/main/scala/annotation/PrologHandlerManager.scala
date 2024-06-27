@@ -1,7 +1,7 @@
 package pps.exam.application
 package annotation
 
-import alice.tuprolog.Prolog
+import alice.tuprolog.{Prolog, Theory}
 import org.apache.logging.log4j.scala.Logging
 
 import java.lang.reflect.{InvocationHandler, Method}
@@ -9,13 +9,20 @@ import java.lang.reflect.{InvocationHandler, Method}
 /**
  * Trait that gives the superclass the property of being a prolog manager.
  */
-trait PrologManager
+trait PrologManager extends Logging
 
 /**
  * Companion object that contains the method to create a new PrologHandler instance for the original object passed as argument.
  */
 object PrologHandlerManager extends PrologManager:
-  def apply(originalObject: Any): InvocationHandler = new PrologHandlerManager(new Prolog(), originalObject)
+  def apply(originalObject: Any): InvocationHandler =
+    if originalObject.getClass.isAnnotationPresent(classOf[PrologClass]) then
+      logger.trace(s"originalObject '$originalObject' is annotated with @PrologClass, extracting its clauses...")
+      val prologClassTheory = originalObject.getClass.getAnnotation(classOf[PrologClass]).clauses()
+      new PrologHandlerManager(prologClassTheory, originalObject)
+    else
+      logger.trace(s"originalObject '$originalObject' is not annotated with @PrologClass, creating a new Prolog engine...")
+      new PrologHandlerManager(null, originalObject)
 
 /**
  * Handler for an object that intercepts any method call for methods annotated with @PrologMethod inside the
@@ -24,7 +31,7 @@ object PrologHandlerManager extends PrologManager:
  *
  * @param originalObject the original object, methods calls of this object annotated with @PrologMethod are intercepted
  */
-class PrologHandlerManager(engine: Prolog, originalObject: Any) extends Logging with InvocationHandler with PrologManager:
+class PrologHandlerManager(classClauses: Array[String], originalObject: Any) extends InvocationHandler with PrologManager:
   /**
    * Intercepts the method call of the proxy instance and executes the logic of the annotated @PrologMethod method
    * instead of the original method body.
@@ -39,7 +46,7 @@ class PrologHandlerManager(engine: Prolog, originalObject: Any) extends Logging 
 
     if method.isAnnotationPresent(classOf[PrologMethod]) then
       logger.trace("method is annotated with @PrologMethod, executing Prolog logic...")
-      PrologMethodHandler(engine).executeAnnotation(method, args)
+      PrologMethodHandler(classClauses).executeAnnotation(method, args)
 
     // if the method is not annotated with @PrologMethod, invoke the default method on the real object as if there was no proxy
     else
