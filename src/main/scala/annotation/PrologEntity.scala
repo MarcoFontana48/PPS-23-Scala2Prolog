@@ -5,9 +5,9 @@ import alice.tuprolog.*
 import org.apache.logging.log4j.scala.Logging
 
 /**
- * sealed trait that represents only the entities that can be extracted from the @PrologMethod annotation.
+ * sealed trait that represents only the entities that can be extracted from any the Scala2Prolog annotation.
  */
-sealed trait PrologMethodEntity extends Logging:
+sealed trait PrologEntity extends Logging:
   /**
    * Method to check if the extracted field of the annotation is empty
    *
@@ -30,12 +30,12 @@ sealed trait PrologMethodEntity extends Logging:
  *
  * @param term a compound term that represents the predicate.
  */
-case class Predicate(term: Term) extends PrologMethodEntity with Logging
+case class Predicate(term: Term) extends PrologEntity
 
 /**
  * Object companion that contains the methods to extract and parse the 'predicate' method field of the @PrologMethod annotation.
  */
-object Predicate extends PrologMethodEntity with Logging:
+object Predicate extends PrologEntity:
 
   import Term.createTerm
 
@@ -69,12 +69,12 @@ object Predicate extends PrologMethodEntity with Logging:
  * @param inputVars  an array that contains the input variables of the signature.
  * @param outputVars an array that contains the output variables of the signature.
  */
-case class Signature(inputVars: Array[String], outputVars: Array[String]) extends PrologMethodEntity
+case class Signature(inputVars: Array[String], outputVars: Array[String]) extends PrologEntity
 
 /**
  * Object companion that contains the methods to extract and parse the 'signature' method field of the @PrologMethod annotation.
  */
-object Signature extends PrologMethodEntity with Logging:
+object Signature extends PrologEntity:
   def apply(param: String): Option[Signature] =
     isEmpty(param, {
       logger.trace("signature is empty, returning None signature...")
@@ -102,12 +102,12 @@ object Signature extends PrologMethodEntity with Logging:
  *
  * @param values an array that contains the types of the method field.
  */
-case class Types(values: Array[String]) extends PrologMethodEntity
+case class Types(values: Array[String]) extends PrologEntity
 
 /**
  * Object companion that contains the methods to extract and parse the 'types' method field of the @PrologMethod annotation.
  */
-object Types extends PrologMethodEntity with Logging:
+object Types extends PrologEntity:
   def apply(param: Array[String]): Option[Types] =
     isEmpty(param.mkString, {
       logger.trace("types is empty, returning None types...")
@@ -126,12 +126,12 @@ object Types extends PrologMethodEntity with Logging:
  *
  * @param value an array that contains the clauses of the method field.
  */
-case class Clauses(value: Array[String]) extends PrologMethodEntity
+case class Clauses(value: Array[String]) extends PrologEntity
 
 /**
  * Object companion that contains the methods to extract and parse the 'clauses' method field of the @PrologMethod annotation.
  */
-object Clauses extends PrologMethodEntity with Logging:
+object Clauses extends PrologEntity:
   def apply(param: Array[String]): Option[Clauses] =
     isEmpty(param.mkString, {
       logger.trace("clauses is empty, returning None clauses...")
