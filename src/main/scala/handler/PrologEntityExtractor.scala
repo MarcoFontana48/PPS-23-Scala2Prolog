@@ -1,8 +1,6 @@
 package pps.exam.application
 package handler
 
-import annotation.*
-
 /**
  * trait that represents annotation's method fields extractors.
  */

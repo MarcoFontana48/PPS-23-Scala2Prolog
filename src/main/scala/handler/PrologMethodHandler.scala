@@ -9,8 +9,6 @@ import java.lang.reflect.Method
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
-type PrologAnnotationFields = Map[String, Option[PrologEntity]]
-
 /**
  * handle the methods annotated with @PrologMethod.
  */
@@ -238,7 +236,7 @@ class PrologMethodHandler(classClauses: Option[Clauses])
      * rules of the @PrologMethod annotation to set the theory into the engine.
      * Otherwise, it sets only the rules of the @PrologMethod annotation into the engine.
      */
-    def setEngineTheory(): Unit = {
+    def setEngineTheory(): Unit =
       if classClauses.isDefined then
         val classClausesStr = classClauses.get.value.mkString("", " ", " ")
         val theory = classClausesStr + rules
@@ -248,7 +246,6 @@ class PrologMethodHandler(classClauses: Option[Clauses])
       else
         logger.trace(s"no @PrologClass clauses found, setting only @PrologMethod rules into the engine: '$rules'...")
         engine.setTheory(Theory(rules))
-    }
 
     setEngineTheory()
 
@@ -257,28 +254,32 @@ class PrologMethodHandler(classClauses: Option[Clauses])
     logger.debug(s"Solving goal: $goal")
     val firstSolveInfo = engine.solve(goal)
 
-    // - define a high-order function to initialize the LazyList to compute elements only when needed
+    // - define a high-order function to initialize the LazyList to compute elements only when needed. Uses 'Try' since
+    //   tuProlog engine may throw an exception 'NoSolutionException' while evaluating the goal
     val initializeLazyListFn: (Try[SolveInfo] => Try[SolveInfo]) => LazyList[Try[SolveInfo]] = LazyList.iterate(Try(firstSolveInfo))
 
     // - define the anonymous partial pattern matching function to compute the next solution
-    val computeNextSolutionFn: Try[SolveInfo] => Try[SolveInfo] = {
+    val computeNextSolutionFn: Try[SolveInfo] => Try[SolveInfo] =
       case Success(solveInfo) if solveInfo.hasOpenAlternatives => Try(engine.solveNext())
       case _ => Failure(new NoSuchElementException)
-    }
 
     // - define the anonymous partial pattern matching function to extract the solution
-    val getNextSolutionsFn: ((Try[SolveInfo], Int)) => Option[SolveInfo] = {
+    val getNextSolutionsFn: ((Try[SolveInfo], Int)) => Option[SolveInfo] =
       case (Success(solveInfo), index) if solveInfo.isSuccess =>
         logger.trace(s"Solution ${index + 1} found:\n$solveInfo")
         Some(solveInfo)
       case _ => None
-    }
 
-    // Return the solutions by assembling previously declared functions
-    initializeLazyListFn(computeNextSolutionFn)
-      .takeWhile(_.isSuccess)
-      .zipWithIndex
-      .flatMap(getNextSolutionsFn)
+    //return the solutions by assembling previously declared functions and collecting them in an Iterable
+    for
+      //iterate over each Try[SolveInfo] and its index in the LazyList
+      (solveInfoTry, index) <- initializeLazyListFn(computeNextSolutionFn).takeWhile(_.isSuccess).zipWithIndex
+      //convert the Try[SolveInfo] to an Option[SolveInfo] to check if it is a success and yield the SolveInfo
+      solveInfo <- solveInfoTry.toOption if solveInfo.isSuccess
+    yield
+      //yield the successful SolveInfo, collecting it into a resulting Iterable[SolveInfo]
+      logger.trace(s"Solution ${index + 1} found:\n$solveInfo")
+      solveInfo
 
   /**
    * Formats the return type of the solutions based on what was declared in the annotation.
