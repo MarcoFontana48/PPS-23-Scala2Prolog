@@ -1,6 +1,7 @@
 package pps.exam.application
 package annotation
 
+import alice.tuprolog.Prolog
 import org.apache.logging.log4j.scala.Logging
 import org.scalatest.matchers.should.Matchers
 
@@ -79,137 +80,135 @@ class PrologMethodUtilsDeclarationTestImpl extends PrologMethodUtilsDeclarationT
   def testMethodPredicate_IO(): Unit = ()
 
 class PrologMethodHandlerTest extends AbstractAnnotationTest with Matchers with Logging:
-
-  import PrologMethodHandler.*
-
+  
   /* @PrologMethod method field 'signature' tests */
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "return an empty signature from a @PrologMethod if the default empty method field parsed" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_default")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualSignature = extractSignature(annotation)
+      val actualSignature = PrologMethodHandler(new Prolog()).extractSignature(annotation)
 
       assert(actualSignature.isEmpty)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "extract the correct signature from a @PrologMethod if a single input variable is set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_XY")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualSignature = extractSignature(annotation)
+      val actualSignature = PrologMethodHandler(new Prolog()).extractSignature(annotation)
       val expectedSignature = Signature("(X) -> {Y}")
 
       assert(actualSignature.get.inputVars === expectedSignature.get.inputVars)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "extract the correct signature from a @PrologMethod if a single output variable is set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_XY")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualSignature = extractSignature(annotation)
+      val actualSignature = PrologMethodHandler(new Prolog()).extractSignature(annotation)
       val expectedSignature = Signature("(X) -> {Y}")
 
       assert(actualSignature.get.outputVars === expectedSignature.get.outputVars)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "extract the correct signature from a @PrologMethod if multiple input variables are set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_XXXYY")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualSignature = extractSignature(annotation)
+      val actualSignature = PrologMethodHandler(new Prolog()).extractSignature(annotation)
       val expectedSignature = Signature("(Var1, VAR2, X3) -> {Y1, Variabile2}")
 
       assert(actualSignature.get.inputVars === expectedSignature.get.inputVars)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "extract the correct signature from a @PrologMethod if multiple output variables are set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_XXXYY")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualSignature = extractSignature(annotation)
+      val actualSignature = PrologMethodHandler(new Prolog()).extractSignature(annotation)
       val expectedSignature = Signature("(Var1, VAR2, X3) -> {Y1, Variabile2}")
 
       assert(actualSignature.get.outputVars === expectedSignature.get.outputVars)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "throw an IllegalArgumentException when extracting the signature from a @PrologMethod if brackets are formatted incorrectly" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_incorrectFormatBrackets")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      assertThrows[IllegalArgumentException](extractSignature(annotation))
+      assertThrows[IllegalArgumentException](PrologMethodHandler(new Prolog()).extractSignature(annotation))
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "throw an IllegalArgumentException when extracting the signature from a @PrologMethod if the arrow is formatted incorrectly" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_incorrectFormatArrow")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      assertThrows[IllegalArgumentException](extractSignature(annotation))
+      assertThrows[IllegalArgumentException](PrologMethodHandler(new Prolog()).extractSignature(annotation))
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "throw an IllegalArgumentException when extracting the signature from a @PrologMethod if variables do not start with uppercase character" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_incorrectFormatVars")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      assertThrows[IllegalArgumentException](extractSignature(annotation))
+      assertThrows[IllegalArgumentException](PrologMethodHandler(new Prolog()).extractSignature(annotation))
 
   /* @PrologMethod method field 'types' tests */
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "return an empty type from a @PrologMethod if the default empty method field parsed" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodTypes_default")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualType = extractTypes(annotation)
+      val actualType = PrologMethodHandler(new Prolog()).extractTypes(annotation)
 
       assert(actualType.isEmpty)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "extract the correct type from a @PrologMethod if a single type is set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodTypes_IntInt")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualType = extractTypes(annotation)
+      val actualType = PrologMethodHandler(new Prolog()).extractTypes(annotation)
       val expectedType = Types(Array("Int", "Int"))
 
       assert(actualType.get.values === expectedType.get.values)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "extract the correct type from a @PrologMethod if a list type is set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodTypes_ListIntListBoolean")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualType = extractTypes(annotation)
+      val actualType = PrologMethodHandler(new Prolog()).extractTypes(annotation)
       val expectedType = Types(Array("List[Int]", "List[Boolean]"))
 
       assert(actualType.get.values === expectedType.get.values)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "throw an IllegalArgumentException when trying to extract the type from a @PrologMethod if non valid type (List[List[...]]) is set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodTypes_ListListInt")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      assertThrows[IllegalArgumentException](extractTypes(annotation))
+      assertThrows[IllegalArgumentException](PrologMethodHandler(new Prolog()).extractTypes(annotation))
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "throw an IllegalArgumentException when trying to extract the type from a @PrologMethod if non valid type (Unit) is set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodTypes_Unit")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      assertThrows[IllegalArgumentException](extractTypes(annotation))
+      assertThrows[IllegalArgumentException](PrologMethodHandler(new Prolog()).extractTypes(annotation))
 
   /* @PrologMethod method field 'predicate' tests */
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "extract empty predicate from a @PrologMethod if default predicate is present" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodPredicate_default")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualPredicate = extractPredicate(annotation)
+      val actualPredicate = PrologMethodHandler(new Prolog()).extractPredicate(annotation)
 
       assert(actualPredicate.isEmpty)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "extract the correct predicate from a @PrologMethod if no predicate notation symbols are present" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodPredicate_noSymbols")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualPredicate = extractPredicate(annotation)
+      val actualPredicate = PrologMethodHandler(new Prolog()).extractPredicate(annotation)
       val expectedPredicate = Predicate("p(X1, X2, Y).")
 
       assert(actualPredicate.get === expectedPredicate.get)
 
-  "PrologMethodUtils" should :
+  "PrologMethodHandler" should :
     "extract the correct predicate from a @PrologMethod if predicate notation symbols are present" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodPredicate_IO")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
-      val actualPredicate = extractPredicate(annotation)
+      val actualPredicate = PrologMethodHandler(new Prolog()).extractPredicate(annotation)
       val expectedPredicate = Predicate("p(+X1, +X2, -Y).")
 
       assert(actualPredicate.get === expectedPredicate.get)

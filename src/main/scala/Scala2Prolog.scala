@@ -5,7 +5,8 @@ import annotation.PrologInterceptor
 import org.apache.logging.log4j.scala.Logging
 
 /**
- * This object provides a method to set a theory and solve a goal in Prolog.
+ * This object is used to create a new S2P proxy instance of the original object passed as argument to handle the
+ * annotated Prolog logic execution.
  */
 object Scala2Prolog extends Logging:
   def newProxyInstanceOf[A](originalObject: A): A =

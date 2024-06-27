@@ -1,6 +1,8 @@
 package pps.exam.application
 package annotation
 
+import alice.tuprolog.Prolog
+
 import java.lang.reflect.Method
 
 /**
@@ -18,5 +20,5 @@ trait PrologAnnotationHandler extends S2PHandler:
  * trait that gives the superclass the ability to execute the annotated prolog method body
  */
 trait PrologBodyMethodHandler extends S2PHandler:
-  def executeMethodBody(method: Method, args: Array[AnyRef]): AnyRef =
+  def executeMethodBody(engine: Prolog, method: Method, args: Array[AnyRef]): AnyRef =
     method.invoke(method.getDeclaringClass, args: _*)

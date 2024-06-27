@@ -1,8 +1,7 @@
 package pps.exam.application
 package annotation
 
-import annotation.PrologMethodHandler.logger
-
+import alice.tuprolog.Prolog
 import org.apache.logging.log4j.scala.Logging
 
 import java.lang.reflect.{InvocationHandler, Method}
@@ -16,7 +15,7 @@ trait PrologManager
  * Companion object that contains the method to create a new PrologHandler instance for the original object passed as argument.
  */
 object PrologHandlerManager extends PrologManager:
-  def apply(originalObject: Any): InvocationHandler = new PrologHandlerManager(originalObject)
+  def apply(originalObject: Any): InvocationHandler = new PrologHandlerManager(new Prolog(), originalObject)
 
 /**
  * Handler for an object that intercepts any method call for methods annotated with @PrologMethod inside the
@@ -25,7 +24,7 @@ object PrologHandlerManager extends PrologManager:
  *
  * @param originalObject the original object, methods calls of this object annotated with @PrologMethod are intercepted
  */
-class PrologHandlerManager(originalObject: Any) extends Logging with InvocationHandler with PrologManager:
+class PrologHandlerManager(engine: Prolog, originalObject: Any) extends Logging with InvocationHandler with PrologManager:
   /**
    * Intercepts the method call of the proxy instance and executes the logic of the annotated @PrologMethod method
    * instead of the original method body.
@@ -40,13 +39,13 @@ class PrologHandlerManager(originalObject: Any) extends Logging with InvocationH
 
     if method.isAnnotationPresent(classOf[PrologMethod]) then
       logger.trace("method is annotated with @PrologMethod, executing Prolog logic...")
-      PrologMethodHandler.executeAnnotation(method, args)
+      PrologMethodHandler(engine).executeAnnotation(method, args)
 
     // if the method is not annotated with @PrologMethod, invoke the default method on the real object as if there was no proxy
     else
       logger.debug("method is not annotated with @PrologMethod, invoking the default method on the real object...")
-      // !!PERSONAL REMINDER: DO NOT EXTEND this class with PrologBodyMethodHandler, since it's NOT an handler, the 
-      // method invocation inside this else statement does NOT have anything to do with PROLOG METHODS, because if it 
-      // reaches this else statement, it means that the method is NOT annotated with @PrologMethod, so it should just 
+      // !!PERSONAL REMINDER: DO NOT EXTEND this class with PrologBodyMethodHandler, since it's NOT an handler, the
+      // method invocation inside this else statement does NOT have anything to do with PROLOG METHODS, because if it
+      // reaches this else statement, it means that the method is NOT annotated with @PrologMethod, so it should just
       // invoke the original method body as if there was no proxy.
       method.invoke(originalObject, args: _*)
