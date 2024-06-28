@@ -278,7 +278,7 @@ class PrologMethodHandler(classClauses: Option[Clauses])
       solveInfo <- solveInfoTry.toOption if solveInfo.isSuccess
     yield
       //yield the successful SolveInfo, collecting it into a resulting Iterable[SolveInfo]
-      logger.trace(s"Solution ${index + 1} found:\n$solveInfo")
+      logger.trace(s"\nSolution ${index + 1} found:\n$solveInfo")
       solveInfo
 
   /**
@@ -302,13 +302,12 @@ class PrologMethodHandler(classClauses: Option[Clauses])
         val listContentPattern = "List\\[(.*)]".r
         val outputTypes = signatures.outputVars.indices.map(idx => types.values(lastInputVarIndex + idx + 1))
 
-        if (outputTypes.forall(_ matches listContentPattern.pattern.pattern())) {
+        if outputTypes.forall(_ matches listContentPattern.pattern.pattern()) then
           logger.trace(s"output types are all lists, returning the results as a list of lists")
           solveInfos.flatMap(info => signatures.outputVars.map(info.getTerm)).toList
-        } else {
+        else
           logger.trace(s"output types are not all lists, returning the results as a generic iterable of terms")
           solveInfos.map(_.getSolution)
-        }
 
       // otherwise return the results as generic Iterable[Term] type
       case _ => solveInfos.map(_.getSolution)
