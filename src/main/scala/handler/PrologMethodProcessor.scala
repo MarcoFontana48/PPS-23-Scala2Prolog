@@ -103,7 +103,7 @@ class PrologMethodProcessor(classClauses: Option[Clauses])
   extension (fields: PrologAnnotationFields) private def generateRules: String =
     fields.get("clauses").flatten match
       case Some(clauses: Clauses) => clauses.value.mkString(" ")
-      case _ => throw new Exception("Failed to extract clauses or clauses are not of type Clauses")
+      case _ => ""  // in case clauses are not present, return an empty string
 
   /**
    * Generates a goal from the extracted fields of the @PrologMethod annotation.
