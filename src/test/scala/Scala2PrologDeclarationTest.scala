@@ -33,6 +33,10 @@ trait Scala2PrologDeclarationTestB:
   @PrologMethod
   def methodA(prologVar: String): Iterable[Term] = null
 
+  @PrologAddSharedClauses(clauses = Array("methodA(a)."))
+  @PrologMethod
+  def methodException(prologVar: String): Iterable[Term] = null
+
 @PrologClass(clauses = Array("methodA(c).","methodB(c)."))
 class Scala2PrologDeclarationTestBNonEmptyClausesImpl extends Scala2PrologDeclarationTestB
 

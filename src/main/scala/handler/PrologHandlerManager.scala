@@ -52,6 +52,7 @@ class PrologHandlerManager(var classClauses: Option[Clauses], originalObject: An
   override def invoke(proxy: Any, method: Method, args: Array[AnyRef]): AnyRef =
     logger.debug(s"invoking method '${method.getName}' on proxy of original object '$originalObject'...")
 
+    logger.trace(s"method's annotations: ${method.getDeclaredAnnotations.toList.map(_.annotationType().getSimpleName)}")
     (method.isAnnotationPresent(classOf[PrologMethod]), method.isAnnotationPresent(classOf[PrologAddSharedClauses])) match
       case (true, true) =>
         throw new IllegalArgumentException("A method cannot have both @PrologMethod and @PrologAddSharedClauses annotations, use only one instead")

@@ -111,3 +111,9 @@ class Scala2PrologTest extends AbstractTest:
         3,
         Iterable(Term.createTerm("methodA(a)"), Term.createTerm("methodA(b)"))
       ))
+
+  "Scala2Prolog" should :
+    "throw an exception when invoking a method annotated with both @PrologMethod and @PrologAddSharedClauses" in :
+      val scala2PrologDeclarationTest = Scala2PrologDeclarationTestBNonEmptyClausesImpl().asInstanceOf[Scala2PrologDeclarationTestB]
+      val proxy = Scala2Prolog.newProxyInstanceOf(scala2PrologDeclarationTest)
+      assertThrows[IllegalArgumentException](proxy.methodException("X"))
