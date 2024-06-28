@@ -1,7 +1,6 @@
 package pps.exam.application
 package interceptor
 
-import annotation.PrologMethod
 import handler.AbstractAnnotationTest
 
 import alice.tuprolog.Term

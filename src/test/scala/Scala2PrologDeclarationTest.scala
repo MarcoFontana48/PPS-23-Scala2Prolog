@@ -20,6 +20,8 @@ class Scala2PrologDeclarationTestANonEmptyClausesImpl extends Scala2PrologDeclar
 @PrologClass
 class Scala2PrologDeclarationTestAEmptyClausesImpl extends Scala2PrologDeclarationTestA
 
+
+
 trait Scala2PrologDeclarationTestB:
   @PrologAddSharedClauses(clauses = Array("methodA(a)."))
   def clausesAdder(): Unit = ()

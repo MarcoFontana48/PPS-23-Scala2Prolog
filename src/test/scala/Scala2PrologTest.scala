@@ -1,11 +1,12 @@
 package pps.exam.application
 
 import alice.tuprolog.Term
+import org.apache.logging.log4j.scala.Logging
 
-class Scala2PrologTest extends AbstractTest:
-  
+class Scala2PrologTest extends AbstractTest with Logging:
+
   import Scala2Prolog.newProxyInstanceOf
-  
+
   "Scala2Prolog" should :
     "reuse the same clauses in multiple calls of method's annotated with @PrologMethod from a common class annotated " +
       "with @PrologClass" in :
@@ -120,3 +121,47 @@ class Scala2PrologTest extends AbstractTest:
       val scala2PrologDeclarationTest = Scala2PrologDeclarationTestBNonEmptyClausesImpl().asInstanceOf[Scala2PrologDeclarationTestB]
       val proxy = newProxyInstanceOf(scala2PrologDeclarationTest)
       assertThrows[IllegalArgumentException](proxy.methodException("X"))
+
+
+
+  "The path finding algorithm" should :
+    "find all possible paths with the current active actions from the starting point to the exit point" in :
+      val scala2PrologDeclarationPathFindingAlgorithmTest = Scala2PrologDeclarationPathFindingAlgorithmTestImpl().asInstanceOf[Scala2PrologDeclarationPathFindingAlgorithmTest]
+      val pathFindingAlgorithmProxy = newProxyInstanceOf(scala2PrologDeclarationPathFindingAlgorithmTest)
+
+      var activeActions: List[String] = List()
+      logger.trace(s"currently active actions: $activeActions")
+      activeActions = pathFindingAlgorithmProxy.addActionUp(activeActions)
+
+      logger.trace(s"currently active actions: $activeActions")
+      activeActions = pathFindingAlgorithmProxy.addActionRight(activeActions)
+      val upRightActionsActiveActual = pathFindingAlgorithmProxy.find_plan(List(1, 1), List(2, 2), "Plan")
+      val upRightActionsActiveExpected = Iterable.empty
+
+      logger.trace(s"currently active actions: $activeActions")
+      activeActions = pathFindingAlgorithmProxy.addActionDown(activeActions)
+      val upRightDownActionsActiveActual = pathFindingAlgorithmProxy.find_plan(List(1, 1), List(2, 2), "Plan")
+      val upRightDownActionsActiveExpected = Iterable(
+        Term.createTerm("find_plan([1,1],[2,2],[right,down])"),
+        Term.createTerm("find_plan([1,1],[2,2],[down,right])"),
+        Term.createTerm("find_plan([1,1],[2,2],[down,down,right,up])")
+      )
+
+      logger.trace(s"currently active actions: $activeActions")
+      activeActions = pathFindingAlgorithmProxy.addActionLeft(activeActions)
+
+      logger.trace(s"currently active actions: $activeActions")
+      val allActionsActiveActual = pathFindingAlgorithmProxy.find_plan(List(1, 1), List(2, 2), "Plan")
+      val allActionsActiveExpected = Iterable(
+        Term.createTerm("find_plan([1,1],[2,2],[right,right,down,down,left,up])"),
+        Term.createTerm("find_plan([1,1],[2,2],[right,right,down,down,left,left,up,right])"),
+        Term.createTerm("find_plan([1,1],[2,2],[right,right,down,left])"),
+        Term.createTerm("find_plan([1,1],[2,2],[right,down])"),
+        Term.createTerm("find_plan([1,1],[2,2],[down,right])"),
+        Term.createTerm("find_plan([1,1],[2,2],[down,down,right,up])"),
+        Term.createTerm("find_plan([1,1],[2,2],[down,down,right,right,up,up,left,down])"),
+        Term.createTerm("find_plan([1,1],[2,2],[down,down,right,right,up,left])")
+      )
+
+      assert((upRightActionsActiveActual, upRightDownActionsActiveActual, allActionsActiveActual) === (upRightActionsActiveExpected, upRightDownActionsActiveExpected, allActionsActiveExpected))
+
