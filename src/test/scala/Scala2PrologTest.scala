@@ -60,11 +60,11 @@ class Scala2PrologTest extends AbstractTest:
     "executing @PrologAddClassClauses method's body" in :
       val scala2PrologDeclarationTest = Scala2PrologDeclarationTestBNonEmptyClausesImpl().asInstanceOf[Scala2PrologDeclarationTestB]
       val proxy = Scala2Prolog.newProxyInstanceOf(scala2PrologDeclarationTest)
-      val prologResultA = proxy.methodA("X")
-      proxy.clausesAdder()
-      val prologResultB = proxy.methodA("X")
-      val prologResultC = proxy.clausesAdderNonEmptyBody(1, 2)
-      val prologResultD = proxy.methodA("X")
+      val prologResultA = proxy.methodA("X")                    // ?- methodA(X). CURRENT_THEORY: methodA(c)
+      proxy.clausesAdder()                                      // ?-     /       UPDATED THEORY: methodA(c), methodA(a)              METHOD BODY IS EMPTY
+      val prologResultB = proxy.methodA("X")                    // ?- methodA(X). CURRENT_THEORY: methodA(c), methodA(a)
+      val prologResultC = proxy.clausesAdderNonEmptyBody(1, 2)  // ?-     /       UPDATED THEORY: methodA(c), methodA(a), methodA(b)  ALSO EXECUTES METHOD BODY
+      val prologResultD = proxy.methodA("X")                    // ?- methodA(X). CURRENT_THEORY: methodA(c), methodA(a), methodA(b)
 
       assert((prologResultA, prologResultB, prologResultC, prologResultD) === (
         Iterable(Term.createTerm("methodA(c)")),
