@@ -299,7 +299,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
    * @param solveInfos an Iterable containing the solutions of the goal.
    * @return an Iterable (or the return type specified in the annotation) containing the solutions.
    */
-  extension (fields: PrologAnnotationFields) private def formatOutput (solveInfos: Iterable[SolveInfo]): Iterable[AnyRef] =
+  extension (fields: PrologAnnotationFields) private def formatOutput(solveInfos: Iterable[SolveInfo]): Iterable[Any] =
     val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
     val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
 
@@ -313,12 +313,13 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
         val listContentPattern = "List\\[(.*)]".r
         val outputTypes = signatures.outputVars.indices.map(idx => types.values(lastInputVarIndex + idx + 1))
 
-        if outputTypes.forall(_ matches listContentPattern.pattern.pattern()) then
-          logger.trace(s"output types are all lists, returning the results as a list of lists")
-          solveInfos.flatMap(info => signatures.outputVars.map(info.getTerm)).toList
-        else
-          logger.trace(s"output types are not all lists, returning the results as a generic iterable of terms")
-          solveInfos.map(_.getSolution)
+        outputTypes match
+          case types if types forall (_ matches listContentPattern.pattern.pattern()) =>
+            logger.trace(s"output types are all lists, returning the results as a list of lists")
+            solveInfos.flatMap(info => signatures.outputVars.map(info.getTerm)).toList
+          case _ =>
+            logger.trace(s"output types are not all lists, returning the results as a generic iterable of terms")
+            solveInfos.map(_.getSolution)
 
       // otherwise return the results as generic Iterable[Term] type
       case _ => solveInfos.map(_.getSolution)
