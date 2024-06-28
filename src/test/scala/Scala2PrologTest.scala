@@ -45,3 +45,30 @@ class Scala2PrologTest extends AbstractTest:
           Term.createTerm("methodA(a)")
         ))
       )
+
+  "Scala2Prolog" should :
+    "return an empty Iterable of Term if no @PrologMethod nor @PrologClass clauses were defined, because the set" +
+    "Theory in the tuProlog engine will be empty" in :
+      val scala2PrologDeclarationTest = Scala2PrologDeclarationTestAEmptyClausesImpl().asInstanceOf[Scala2PrologDeclarationTestA]
+      val proxy = Scala2Prolog.newProxyInstanceOf(scala2PrologDeclarationTest)
+      val prologResultC = proxy.methodC("X")
+
+      assert(prologResultC === Iterable.empty)
+
+  "Scala2Prolog" should :
+    "execute add @PrologAddClassClauses clauses along with @PrologClass's clauses when invoking the method, plus " +
+    "executing @PrologAddClassClauses method's body" in :
+      val scala2PrologDeclarationTest = Scala2PrologDeclarationTestBNonEmptyClausesImpl().asInstanceOf[Scala2PrologDeclarationTestB]
+      val proxy = Scala2Prolog.newProxyInstanceOf(scala2PrologDeclarationTest)
+      val prologResultA = proxy.methodA("X")
+      proxy.clausesAdder()
+      val prologResultB = proxy.methodA("X")
+      val prologResultC = proxy.clausesAdderNonEmptyBody(1, 2)
+      val prologResultD = proxy.methodA("X")
+
+      assert((prologResultA, prologResultB, prologResultC, prologResultD) === (
+        Iterable(Term.createTerm("methodA(c)")),
+        Iterable(Term.createTerm("methodA(c)"), Term.createTerm("methodA(a)")),
+        3,
+        Iterable(Term.createTerm("methodA(c)"), Term.createTerm("methodA(a)"), Term.createTerm("methodA(b)"))
+      ))

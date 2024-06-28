@@ -74,7 +74,7 @@ abstract class PrologMethodUtils
   override def extractSignature(prologMethod: PrologMethod): Option[Signature] =
     Signature(prologMethod.signature())
 
-class PrologMethodProcessor(classClauses: Option[Clauses])
+case class PrologMethodProcessor(classClauses: Option[Clauses])
   extends PrologMethodUtils
   with PrologAnnotationExecutor:
   /**

@@ -44,7 +44,7 @@ object Predicate extends PrologEntity:
       logger.trace("predicate is empty, returning None predicate...")
       None
     }, {
-      logger.trace(s"extracted predicate from @PrologMethod annotation: '$param', parsing its content...")
+      logger.trace(s"extracted predicate from @Prolog* annotation: '$param', parsing its content...")
 
       // pattern: 'name(+Varname1, Varname2, ..., ?Varname3)' where in front of any Varname may appear one of those
       // symbols '+', '-', '?', '@' or none
@@ -80,7 +80,7 @@ object Signature extends PrologEntity:
       logger.trace("signature is empty, returning None signature...")
       None
     }, {
-      logger.trace(s"extracted signature from @PrologMethod annotation: '$param', extracting input and output variables...")
+      logger.trace(s"extracted signature from @Prolog* annotation: '$param', extracting input and output variables...")
 
       /* pattern: (X1*) -> {Y1*} */
       val pattern = "\\(([A-Z]\\w*(,\\s*[A-Z]\\w*)*)*\\)\\s*->\\s*\\{([A-Z]\\w*(,\\s*[A-Z]\\w*)*)*}".r
@@ -113,7 +113,7 @@ object Types extends PrologEntity:
       logger.trace("types is empty, returning None types...")
       None
     }, {
-      logger.trace(s"extracted types from @PrologMethod annotation: '${param.mkString("Array(", ", ", ")")}'")
+      logger.trace(s"extracted types from @Prolog* annotation: '${param.mkString("Array(", ", ", ")")}'")
       param.foreach { e =>
         if !e.matches("(Int|Double|String|Boolean|List\\[\\s*(Int|Double|String|Boolean)\\s*])") then
           throw new IllegalArgumentException(s"Invalid type: '$e'. Valid types are 'Int', 'String', 'Boolean', 'List[Int]', 'List[String]', 'List[Boolean]'")
@@ -137,6 +137,6 @@ object Clauses extends PrologEntity:
       logger.trace("clauses is empty, returning None clauses...")
       None
     }, {
-      logger.trace(s"extracted clauses from @PrologMethod annotation: '${param.mkString("Array(", ", ", ")")}'")
+      logger.trace(s"extracted clauses from @Prolog* annotation: '${param.mkString("Array(", ", ", ")")}'")
       Some(new Clauses(param))
     })

@@ -15,5 +15,6 @@ trait PrologAnnotationExecutor extends PrologExecutor:
  * trait that gives the superclass the ability to execute the annotated prolog method body
  */
 trait PrologBodyMethodExecutor extends PrologExecutor:
-  def executeMethodBody(method: Method, args: Array[AnyRef]): AnyRef =
-    method.invoke(method.getDeclaringClass, args: _*)
+  def executeMethodBody(originalObject: Any, method: Method, args: Array[AnyRef]): AnyRef =
+    logger.trace(s"method's declaring class: ${method.getDeclaringClass}")
+    method.invoke(originalObject, args: _*)
