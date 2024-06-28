@@ -52,21 +52,20 @@ class PrologHandlerManager(var classClauses: Option[Clauses], originalObject: An
   override def invoke(proxy: Any, method: Method, args: Array[AnyRef]): AnyRef =
     logger.debug(s"invoking method '${method.getName}' on proxy of original object '$originalObject'...")
 
-    (method.isAnnotationPresent(classOf[PrologMethod]), method.isAnnotationPresent(classOf[PrologAddClassClauses])) match
+    (method.isAnnotationPresent(classOf[PrologMethod]), method.isAnnotationPresent(classOf[PrologAddSharedClauses])) match
       case (true, true) =>
-        throw new IllegalArgumentException("A method cannot have both @PrologMethod and @PrologAddClassClauses annotations, use only one instead")
+        throw new IllegalArgumentException("A method cannot have both @PrologMethod and @PrologAddSharedClauses annotations, use only one instead")
       case (true, _) =>
         logger.trace("method is annotated with @PrologMethod, executing Prolog logic...")
         PrologMethodProcessor(classClauses).executeAnnotation(method, args)
       case (_, true) =>
-        logger.trace("method is annotated with @PrologAddClassClauses, executing Prolog logic...")
+        logger.trace("method is annotated with @PrologAddSharedClauses, executing Prolog logic...")
         val addClausesProcessor = PrologAddClassClausesProcessor(classClauses, originalObject)
 
-        logger.trace(s"updating existing @PrologClass' class clauses '${classClauses.get.value.mkString("Array(", ", ", ")")}' with newly extracted @PrologAddClassClauses' clauses...")
+        logger.trace(s"updating existing @PrologClass' class clauses with newly extracted @PrologAddSharedClauses' clauses...")
         classClauses = addClausesProcessor.addClassClauses(method)
-        logger.trace(s"updated existing @PrologClass' class clauses '${classClauses.get.value.mkString("Array(", ", ", ")")}'")
 
-        logger.trace(s"executing @PrologAddClassClauses' annotated method's body...")
+        logger.trace(s"executing @PrologAddSharedClauses' annotated method's body...")
         addClausesProcessor.executeMethodBody(originalObject, method, args)
       case (false, false) =>
         logger.debug("method is not annotated with any Scala2Prolog's @Prolog* annotations, invoking the default method on the real object...")

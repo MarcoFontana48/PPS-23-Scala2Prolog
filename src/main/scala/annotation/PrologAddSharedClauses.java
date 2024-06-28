@@ -7,8 +7,8 @@ import java.lang.annotation.*;
  * all @PrologMethod methods inside the same Prolog class
  */
 @Documented
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface PrologAddClassClauses {
+public @interface PrologAddSharedClauses {
     String[] clauses() default {};
 }

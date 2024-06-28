@@ -1,13 +1,13 @@
 package pps.exam.application
 package handler
 
-import annotation.{PrologAddClassClauses, PrologMethod}
+import annotation.{PrologAddSharedClauses, PrologMethod}
 
 import java.lang.reflect.Method
 
 
 /**
- * handle the methods annotated with @PrologAddClassClauses.
+ * handle the methods annotated with @PrologAddSharedClauses.
  */
 object PrologAddClassClausesProcessor:
   def apply(classClauses: Option[Clauses], originalObject: Any): PrologAddClassClausesProcessor = new PrologAddClassClausesProcessor(classClauses, originalObject)
@@ -16,15 +16,15 @@ object PrologAddClassClausesProcessor:
  * utility methods to extract and parse the fields of an annotation.
  */
 abstract class PrologAddClassClausesUtils
-  extends PrologExtractorUtils[PrologAddClassClauses, PrologAnnotationFields]
-  with ClausesExtractor[PrologAddClassClauses]:
+  extends PrologExtractorUtils[PrologAddSharedClauses, PrologAnnotationFields]
+  with ClausesExtractor[PrologAddSharedClauses]:
   /**
    * Method to extract and parse the fields of a Scala2Prolog annotation.
    *
    * @param prologAddClassClauses a Scala2Prolog annotation.
    * @return a map that contains the extracted and parsed fields of the annotation
    */
-  override def extractMethodFields(prologAddClassClauses: PrologAddClassClauses): PrologAnnotationFields =
+  override def extractMethodFields(prologAddClassClauses: PrologAddSharedClauses): PrologAnnotationFields =
     Map(
       "clauses" -> extractClauses(prologAddClassClauses)
     )
@@ -35,7 +35,7 @@ abstract class PrologAddClassClausesUtils
    * @param prologClass a Scala2Prolog annotation.
    * @return the extracted and parsed clauses of the annotation
    */
-  override def extractClauses(prologAddClassClauses: PrologAddClassClauses): Option[Clauses] =
+  override def extractClauses(prologAddClassClauses: PrologAddSharedClauses): Option[Clauses] =
     Clauses(prologAddClassClauses.clauses())
 
 case class PrologAddClassClausesProcessor(classClauses: Option[Clauses], originalObject: Any)
@@ -43,7 +43,7 @@ case class PrologAddClassClausesProcessor(classClauses: Option[Clauses], origina
     with PrologBodyMethodExecutor:
 
   def addClassClauses(method: Method): Option[Clauses] =
-    val prologMethodAnnotation = method.getAnnotation(classOf[PrologAddClassClauses])
+    val prologMethodAnnotation = method.getAnnotation(classOf[PrologAddSharedClauses])
     val extractedClauses = extractClauses(prologMethodAnnotation)
 
     extractedClauses match
