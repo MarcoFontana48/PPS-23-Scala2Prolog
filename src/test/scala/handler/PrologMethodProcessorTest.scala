@@ -55,19 +55,22 @@ class PrologMethodProcessorTest extends AbstractAnnotationTest with Matchers wit
       assert(actualSignature.get.outputVars === expectedSignature.get.outputVars)
 
   "PrologMethodProcessor" should :
-    "throw an IllegalArgumentException when extracting the signature from a @PrologMethod if brackets are formatted incorrectly" in :
+    "throw an IllegalArgumentException when extracting the signature from a @PrologMethod if brackets aren't " +
+      "formatted correctly" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_incorrectFormatBrackets")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       assertThrows[IllegalArgumentException](PrologMethodProcessor(Option.empty).extractSignature(annotation))
 
   "PrologMethodProcessor" should :
-    "throw an IllegalArgumentException when extracting the signature from a @PrologMethod if the arrow is formatted incorrectly" in :
+    "throw an IllegalArgumentException when extracting the signature from a @PrologMethod if the arrow is not " +
+      "formatted correctly" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_incorrectFormatArrow")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       assertThrows[IllegalArgumentException](PrologMethodProcessor(Option.empty).extractSignature(annotation))
 
   "PrologMethodProcessor" should :
-    "throw an IllegalArgumentException when extracting the signature from a @PrologMethod if variables do not start with uppercase character" in :
+    "throw an IllegalArgumentException when extracting the signature from a @PrologMethod if variables do not start " +
+      "with uppercase character" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodSignature_incorrectFormatVars")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       assertThrows[IllegalArgumentException](PrologMethodProcessor(Option.empty).extractSignature(annotation))
@@ -75,7 +78,7 @@ class PrologMethodProcessorTest extends AbstractAnnotationTest with Matchers wit
   /* @PrologMethod method field 'types' tests */
 
   "PrologMethodProcessor" should :
-    "return an empty type from a @PrologMethod if the default empty method field parsed" in :
+    "return an empty type from a @PrologMethod if the default empty method field is parsed" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodTypes_default")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       val actualType = PrologMethodProcessor(Option.empty).extractTypes(annotation)
@@ -101,13 +104,15 @@ class PrologMethodProcessorTest extends AbstractAnnotationTest with Matchers wit
       assert(actualType.get.values === expectedType.get.values)
 
   "PrologMethodProcessor" should :
-    "throw an IllegalArgumentException when trying to extract the type from a @PrologMethod if non valid type (List[List[...]]) is set" in :
+    "throw an IllegalArgumentException when trying to extract the type from a @PrologMethod if non valid type " +
+      "(List[List[...]]) is set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodTypes_ListListInt")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       assertThrows[IllegalArgumentException](PrologMethodProcessor(Option.empty).extractTypes(annotation))
 
   "PrologMethodProcessor" should :
-    "throw an IllegalArgumentException when trying to extract the type from a @PrologMethod if non valid type (Unit) is set" in :
+    "throw an IllegalArgumentException when trying to extract the type from a @PrologMethod if non valid type " +
+      "(Unit) is set" in :
       val prologMethod = classOf[PrologMethodUtilsDeclarationTest].getMethod("testMethodTypes_Unit")
       val annotation = prologMethod.getAnnotation(classOf[PrologMethod])
       assertThrows[IllegalArgumentException](PrologMethodProcessor(Option.empty).extractTypes(annotation))
