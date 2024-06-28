@@ -12,4 +12,7 @@ trait Scala2PrologDeclarationTest:
   def methodB(prologVar: String): Iterable[Term] = null
 
 @PrologClass(clauses = Array("methodA(c).","methodB(c)."))
-class Scala2PrologDeclarationTestImpl extends Scala2PrologDeclarationTest
+class Scala2PrologDeclarationTestNonEmptyClausesImpl extends Scala2PrologDeclarationTest
+
+@PrologClass()
+class Scala2PrologDeclarationTestEmptyClausesImpl extends Scala2PrologDeclarationTest
