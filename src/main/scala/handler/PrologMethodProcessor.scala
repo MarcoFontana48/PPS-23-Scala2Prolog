@@ -299,7 +299,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
    * @param solveInfos an Iterable containing the solutions of the goal.
    * @return an Iterable (or the return type specified in the annotation) containing the solutions.
    */
-  extension (fields: PrologAnnotationFields) private def formatOutput(solveInfos: Iterable[SolveInfo]): Iterable[Any] =
+  extension (fields: PrologAnnotationFields) private def formatOutput(solveInfos: Iterable[SolveInfo]): Iterable[Term] =
     val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
     val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
 
