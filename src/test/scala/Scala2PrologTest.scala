@@ -122,6 +122,15 @@ class Scala2PrologTest extends AbstractTest with Logging:
       val proxy = newProxyInstanceOf(scala2PrologDeclarationTest)
       assertThrows[IllegalArgumentException](proxy.methodException("X"))
 
+  "Scala2Prolog" should :
+    "find nested lists results" in :
+      val scala2PrologDeclarationTest = Scala2PrologDeclarationTestCImpl().asInstanceOf[Scala2PrologDeclarationTestC]
+      val proxy = newProxyInstanceOf(scala2PrologDeclarationTest)
+      val prologResult = proxy.memberNested("a", List(List("a", "b"), List("c", "d")))
+      assert(prologResult === Iterable(
+        Term.createTerm("memberNested(a,[[a,b],[c,d]])")
+      ))
+
 
 
   "The path finding algorithm" should :

@@ -199,11 +199,22 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
      * @return a Term that represents the guessed goal to solve.
      */
     def guessGoal(argsList: List[AnyRef], method: Method): Term =
-      // checks if argsList has 'List(...)' elements and formats them as '[...]' instead, otherwise leaves them as they are
-      val formattedArgs = argsList.map {
-        case list: List[_] => list.mkString("[", ",", "]") // format List elements
+      /**
+       * Formats the element in a valid prolog format.
+       * Checks if argument 'elements' has 'List(...)' elements and formats them as '[...]', otherwise leaves them as
+       * they are
+       *
+       * @param element an element to format.
+       * @return a string that represents the formatted element.
+       */
+      def formatElement(element: Any): String = element match {
+        case list: List[_] => list.map(formatElement).mkString("[", ",", "]") // format list and nested lists
         case other => other.toString
       }
+
+      // formats the arguments of the method in a valid prolog format
+      val formattedArgs = argsList.map(formatElement)
+
       // builds the goal as 'methodName(methodArg1,...,methodArgN)'
       val argsListStr = method.getName + formattedArgs.mkString("(", ",", ")")
       logger.trace(s"guessing goal: '$argsListStr'")

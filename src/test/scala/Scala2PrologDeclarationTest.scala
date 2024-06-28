@@ -46,3 +46,16 @@ class Scala2PrologDeclarationTestBNonEmptyClausesImpl extends Scala2PrologDeclar
 class Scala2PrologDeclarationTestBEmptyClausesImpl extends Scala2PrologDeclarationTestB
 
 class Scala2PrologDeclarationTestBNotAnnotatedClassImpl extends Scala2PrologDeclarationTestB
+
+
+
+trait Scala2PrologDeclarationTestC:
+  @PrologMethod(clauses = Array(
+    "memberNested(X, [X|_]).",
+    "memberNested(X, [[X|_]|_]).",
+    "memberNested(X, [[_|T]|_]) :- memberNested(X, [T]).",
+    "memberNested(X, [_|T]) :- memberNested(X, T)."
+  ))
+  def memberNested(x: String, y: List[List[String]]): Iterable[Term] = null
+
+class Scala2PrologDeclarationTestCImpl extends Scala2PrologDeclarationTestC
