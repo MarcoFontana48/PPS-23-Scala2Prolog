@@ -1,6 +1,6 @@
 package pps.exam.application
 
-import annotation.{PrologAddClassClauses, PrologClass, PrologMethod}
+import annotation.{PrologAddSharedClauses, PrologClass, PrologMethod}
 
 import alice.tuprolog.Term
 
@@ -21,13 +21,13 @@ class Scala2PrologDeclarationTestANonEmptyClausesImpl extends Scala2PrologDeclar
 class Scala2PrologDeclarationTestAEmptyClausesImpl extends Scala2PrologDeclarationTestA
 
 trait Scala2PrologDeclarationTestB:
-  @PrologAddClassClauses(clauses = Array("methodA(a)."))
+  @PrologAddSharedClauses(clauses = Array("methodA(a)."))
   def clausesAdder(): Unit = ()
 
-  @PrologAddClassClauses
+  @PrologAddSharedClauses
   def clausesAdderEmptyAnnotation(): Unit = ()
 
-  @PrologAddClassClauses(clauses = Array("methodA(b)."))
+  @PrologAddSharedClauses(clauses = Array("methodA(b)."))
   def clausesAdderNonEmptyBody(x: Int, y: Int): Int = x + y
 
   @PrologMethod
