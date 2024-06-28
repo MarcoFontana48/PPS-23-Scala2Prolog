@@ -4,7 +4,7 @@ package handler
 /**
  * trait that represents annotation's method fields extractors.
  */
-trait PrologEntityExtractor extends S2PHandler
+trait PrologEntityExtractor extends S2PProcessor
 
 /**
  * abstract class that represents the utility methods to extract and parse annotations.

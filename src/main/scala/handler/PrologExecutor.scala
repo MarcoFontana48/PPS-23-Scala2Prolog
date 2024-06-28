@@ -3,7 +3,7 @@ package handler
 
 import java.lang.reflect.Method
 
-trait PrologExecutor extends S2PHandler
+trait PrologExecutor extends S2PProcessor
 
 /**
  * trait that gives the superclass the ability to execute the prolog annotation logic using tuProlog engine

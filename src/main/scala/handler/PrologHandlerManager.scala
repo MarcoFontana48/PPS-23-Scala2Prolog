@@ -24,7 +24,7 @@ object PrologHandlerManager extends PrologManager:
   def apply(originalObject: Any): InvocationHandler =
     if originalObject.getClass.isAnnotationPresent(classOf[PrologClass]) then
       logger.trace(s"originalObject '$originalObject' is annotated with @PrologClass, extracting its clauses...")
-      val maybeClauses = PrologClassHandler.extractClauses(originalObject.getClass.getAnnotation(classOf[PrologClass]))
+      val maybeClauses = PrologClassProcessor.extractClauses(originalObject.getClass.getAnnotation(classOf[PrologClass]))
       new PrologHandlerManager(maybeClauses, originalObject)
     else
       logger.trace(s"originalObject '$originalObject' is not annotated with @PrologClass, creating a new Prolog engine...")
@@ -54,7 +54,7 @@ class PrologHandlerManager(classClauses: Option[Clauses], originalObject: Any)
 
     if method.isAnnotationPresent(classOf[PrologMethod]) then
       logger.trace("method is annotated with @PrologMethod, executing Prolog logic...")
-      PrologMethodHandler(classClauses).executeAnnotation(method, args)
+      PrologMethodProcessor(classClauses).executeAnnotation(method, args)
     else
       logger.debug("method is not annotated with @PrologMethod, invoking the default method on the real object...")
       method.invoke(originalObject, args: _*)

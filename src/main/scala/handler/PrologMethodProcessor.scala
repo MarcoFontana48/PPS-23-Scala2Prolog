@@ -12,8 +12,8 @@ import scala.util.{Failure, Success, Try}
 /**
  * handle the methods annotated with @PrologMethod.
  */
-object PrologMethodHandler:
-  def apply(classClauses: Option[Clauses]): PrologMethodHandler = new PrologMethodHandler(classClauses)
+object PrologMethodProcessor:
+  def apply(classClauses: Option[Clauses]): PrologMethodProcessor = new PrologMethodProcessor(classClauses)
 
 /**
  * Utility object to extract and parse the fields of @PrologMethod annotations.
@@ -74,7 +74,7 @@ abstract class PrologMethodUtils
   override def extractSignature(prologMethod: PrologMethod): Option[Signature] =
     Signature(prologMethod.signature())
 
-class PrologMethodHandler(classClauses: Option[Clauses])
+class PrologMethodProcessor(classClauses: Option[Clauses])
   extends PrologMethodUtils
   with PrologAnnotationExecutor:
   /**
