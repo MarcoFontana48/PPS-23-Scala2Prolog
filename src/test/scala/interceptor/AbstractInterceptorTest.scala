@@ -1,4 +1,0 @@
-package pps.exam.application
-package interceptor
-
-abstract class AbstractInterceptorTest extends AbstractTest
