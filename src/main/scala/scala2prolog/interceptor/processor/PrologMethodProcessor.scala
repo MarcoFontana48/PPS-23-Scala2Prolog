@@ -193,13 +193,14 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
     def setEngineTheory(): Unit =
       if classClauses.isDefined then
         val classClausesStr = classClauses.get.value.mkString("", " ", " ")
-        val theory = classClausesStr + rules
+        val theory = (classClausesStr + rules).replaceAll("’", "'")
         logger.trace(s"concatenation of @PrologClass clauses '$classClausesStr' with @PrologMethod rules '$rules' to " +
           s"set new theory into the engine: '$theory'...")
         engine.setTheory(Theory(theory))
       else
-        logger.trace(s"no @PrologClass clauses found, setting only @PrologMethod rules into the engine: '$rules'...")
-        engine.setTheory(Theory(rules))
+        val fixedRules = rules.replaceAll("’", "'")
+        logger.trace(s"no @PrologClass clauses found, setting only @PrologMethod rules into the engine: '$fixedRules'...")
+        engine.setTheory(Theory(fixedRules))
 
     setEngineTheory()
 

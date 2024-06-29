@@ -4,8 +4,6 @@ package scala2prolog.interceptor
 import scala2prolog.annotation.{Clauses, PrologAddSharedClauses, PrologClass, PrologMethod}
 import scala2prolog.interceptor.processor.{PrologAddSharedClausesProcessor, PrologClassProcessor, PrologMethodProcessor}
 
-import org.apache.logging.log4j.scala.Logging
-
 import java.lang.reflect.{InvocationHandler, Method}
 
 /**
@@ -49,7 +47,10 @@ class PrologHandler(var classClauses: Option[Clauses], originalObject: Any)
     logger.debug(s"invoking method '${method.getName}' on proxy of original object '$originalObject'...")
 
     logger.trace(s"method's annotations: ${method.getDeclaredAnnotations.toList.map(_.annotationType().getSimpleName)}")
-    (method.isAnnotationPresent(classOf[PrologMethod]), method.isAnnotationPresent(classOf[PrologAddSharedClauses])) match
+    val isPrologMethod: Boolean = method.isAnnotationPresent(classOf[PrologMethod])
+    val isAddSharedClauses: Boolean = method.isAnnotationPresent(classOf[PrologAddSharedClauses])
+
+    (isPrologMethod, isAddSharedClauses) match
       case (true, true) =>
         throw new IllegalArgumentException("A method cannot have both @PrologMethod and @PrologAddSharedClauses annotations, use only one instead")
       case (true, _) =>
