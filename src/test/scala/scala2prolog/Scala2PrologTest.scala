@@ -138,14 +138,14 @@ class Scala2PrologTest extends AbstractTest with Logging:
     "parse the argument using the tuProlog engine and return a boolean (true) when the argument is a valid " +
       "arithmetic expression" in :
       val scala2PrologDeclarationParserTest = PrologParserImplTest().asInstanceOf[PrologParserWrapperTest]
-      val actual = scala2PrologDeclarationParserTest.parse_expr(List("'('","'3'","'+'","'4'","'*'","'2'","')'"), List.empty)
+      val actual = scala2PrologDeclarationParserTest.parse_expr(List("'('","'3'","'+'","'4'","'*'","'2'","')'"), List.empty)  // (3+4*2)
       assert(actual === true)
 
   "The parser" should :
     "parse the argument using the tuProlog engine and return a boolean (false) when the argument is not a valid " +
       "arithmetic expression" in :
       val scala2PrologDeclarationParserTest = PrologParserImplTest().asInstanceOf[PrologParserWrapperTest]
-      val actual = scala2PrologDeclarationParserTest.parse_expr(List("'('","'3'","'#'","'4'","'*'","'2'","')'"), List.empty)
+      val actual = scala2PrologDeclarationParserTest.parse_expr(List("'('","'3'","'#'","'4'","'*'","'2'","')'"), List.empty)  // (3+4*2)
       assert(actual === false)
 
 
