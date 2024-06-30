@@ -11,7 +11,7 @@ trait Scala2PrologDeclarationPathFindingAlgorithmTest extends Logging:
   def addActionUp(activeActions: List[String]): List[String] =
     if !activeActions.contains("up") then
       logger.trace("Adding action up to active actions")
-      activeActions.appended("up")
+      activeActions :+ "up"
     else 
       logger.trace("Action up already in active actions, returning the same list...")
       activeActions
@@ -20,7 +20,7 @@ trait Scala2PrologDeclarationPathFindingAlgorithmTest extends Logging:
   def addActionDown(activeActions: List[String]): List[String] =
     if !activeActions.contains("down") then
       logger.trace("Adding action down to active actions")
-      activeActions.appended("down")
+      activeActions :+ "down"
     else 
       logger.trace("Action down already in active actions, returning the same list...")
       activeActions
@@ -29,7 +29,7 @@ trait Scala2PrologDeclarationPathFindingAlgorithmTest extends Logging:
   def addActionLeft(activeActions: List[String]): List[String] =
     if !activeActions.contains("left") then
       logger.trace("Adding action left to active actions")
-      activeActions.appended("left")
+      activeActions :+ "left"
     else 
       logger.trace("Action left already in active actions, returning the same list...")
       activeActions
@@ -38,7 +38,7 @@ trait Scala2PrologDeclarationPathFindingAlgorithmTest extends Logging:
   def addActionRight(activeActions: List[String]): List[String] =
     if !activeActions.contains("right") then
       logger.trace("Adding action right to active actions")
-      activeActions.appended("right")
+      activeActions :+ "right"
     else 
       logger.trace("Action right already in active actions, returning the same list...")
       activeActions
