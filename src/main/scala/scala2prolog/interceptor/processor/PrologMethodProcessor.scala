@@ -7,7 +7,7 @@ import scala2prolog.interceptor.processor.extractor.PrologMethodUtils
 
 import alice.tuprolog.{Prolog, SolveInfo, Term, Theory}
 
-import java.lang.reflect.Method
+import java.lang.reflect.{Method, ParameterizedType}
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
@@ -29,14 +29,14 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
    * @param method a Method that represents the method annotated with @PrologMethod.
    * @return an Iterable containing the result of the goal
    */
-  override def executeAnnotation(method: Method, args: Array[AnyRef]): AnyRef =
+  override def executeAnnotation(method: Method, args: Array[AnyRef]): Any =
     // extracts the fields of the @PrologMethod annotation, then set the theory and solve the goal using tuProlog
     val prologMethodAnnotation = method.getAnnotation(classOf[PrologMethod])
     val fields = extractMethodFields(prologMethodAnnotation)
     val rules = generateRules(fields)
     val goal = generateGoal(Option(args), method, fields)
     val solutions = computeAllSolutions(rules, goal)
-    formatOutput(solutions, fields)
+    formatOutput(solutions, method, args, fields)
 
   /**
    * Generates rules from the extracted fields of the @PrologMethod annotation.
@@ -243,7 +243,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
    * @param solveInfos an Iterable containing the solutions of the goal.
    * @return an Iterable (or the return type specified in the annotation) containing the solutions.
    */
-  private def formatOutput(solveInfos: Iterable[SolveInfo], fields: PrologAnnotationFields): Iterable[Term] =
+  private def formatOutput(solveInfos: Iterable[SolveInfo], method: Method, args: Array[AnyRef],fields: PrologAnnotationFields): Any =
     val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
     val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
 
@@ -255,15 +255,58 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
 
         // check if all output types are lists, if so return the results as List
         val listContentPattern = "List\\[(.*)]".r
+        logger.info(signatures.outputVars.indices)
         val outputTypes = signatures.outputVars.indices.map(idx => types.values(lastInputVarIndex + idx + 1))
+        logger.info(outputTypes)
 
         outputTypes match
           case types if types forall (_ matches listContentPattern.pattern.pattern()) =>
-            logger.trace(s"output types are all lists, returning the results as a list of lists")
+
+            // Extract the type of the List
+            val listTypes = types.map {
+              case listContentPattern(listType) => listType
+              case _ => ""
+            }
+
+            logger.info(s"output types are all lists of type: ${listTypes.mkString(", ")}, returning the results as a list")
             solveInfos.flatMap(info => signatures.outputVars.map(info.getTerm)).toList
           case _ =>
-            logger.trace(s"output types are not all lists, returning the results as a generic iterable of terms")
+            logger.info(s"output types are not all lists, returning the results as a generic iterable of terms")
             solveInfos.map(_.getSolution)
 
-      // otherwise return the results as generic Iterable[Term] type
-      case _ => solveInfos.map(_.getSolution)
+      // otherwise infer return type
+      case _ =>
+        val prologVarsFromArgs: List[String] = args
+          .filterNot(arg => arg.isInstanceOf[Iterable[_]])
+          .map(_.toString)
+          .filter(_.matches("^[A-Z].*"))
+          .toList
+        logger.info(s"Extracted argument vars (separated by blank space): ${prologVarsFromArgs.mkString(" ")}")
+
+        if prologVarsFromArgs.isEmpty then
+          logger.info(s"No output variables found, returning the only solution as 'Iterable[Term]'...")
+          return solveInfos.map(_.getSolution)
+
+        val returnTypeToTermFn: Map[Class[_], alice.tuprolog.Term => Any] = Map(
+          classOf[Int] -> (_.castTo(classOf[alice.tuprolog.Int]).intValue()),
+          classOf[Double] -> (_.castTo(classOf[alice.tuprolog.Double]).doubleValue()),
+          classOf[Boolean] -> (_.isEqual(Term.createTerm("true"))),
+          classOf[String] -> (_.toString),
+        )
+
+        returnTypeToTermFn.get(method.getReturnType) match
+          case Some(termToValue) =>
+            logger.info(s"Detected return type '${method.getReturnType.getSimpleName}' returning the only solution as ${method.getReturnType.getSimpleName}...")
+            termToValue(solveInfos.head.getTerm(prologVarsFromArgs.head))
+          case None =>
+            logger.info(s"Method's return type is either a collection or an invalid return type, trying to infer type as 'Iterable[...]' ...")
+            solveInfos.flatMap { info =>
+              prologVarsFromArgs.flatMap { varName =>
+                info.getTerm(varName) match
+                  case term: alice.tuprolog.Int => Some(term.intValue())
+                  case term: alice.tuprolog.Double => Some(term.doubleValue())
+                  case term if term.isEqual(Term.createTerm("true")) => Some(true)
+                  case term if term.isEqual(Term.createTerm("false")) => Some(false)
+                  case term: Term ⇒ Some(term)
+              }
+            }

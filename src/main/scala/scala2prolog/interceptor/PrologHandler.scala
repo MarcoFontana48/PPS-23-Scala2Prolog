@@ -43,7 +43,7 @@ class PrologHandler(var classClauses: Option[Clauses], originalObject: Any)
    * @param args   the arguments to pass to the method
    * @return the result of the method call
    */
-  override def invoke(proxy: Any, method: Method, args: Array[AnyRef]): AnyRef =
+  override def invoke(proxy: Any, method: Method, args: Array[AnyRef]): Any =
     logger.debug(s"invoking method '${method.getName}' on proxy of original object '$originalObject'...")
 
     logger.trace(s"method's annotations: ${method.getDeclaredAnnotations.toList.map(_.annotationType().getSimpleName)}")
