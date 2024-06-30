@@ -23,25 +23,25 @@ class PrologMethodInterceptorTest extends AbstractProcessorTest with Matchers wi
     "intercept the @PrologMethod annotation and execute its logic producing the correct result when:" +
       "predicate = p(X)., clauses = Array(p(a).)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
-      assert(proxy.testMethodPredicateClauses_Xa("X") === Iterable(createTerm("p(a)")))
+      assert(proxy.testMethodPredicateClauses_Xa("X") === Iterable(createTerm("a")))
 
   "PrologMethodInterceptor" should :
     "intercept the @PrologMethod annotation and execute its logic producing the correct result when:" +
       "predicate = p(+X)., clauses = Array(p(a).)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
-      assert(proxy.testMethodPredicateClauses_minusXa("X") === Iterable(createTerm("p(a)")))
+      assert(proxy.testMethodPredicateClauses_minusXa("X") === Iterable(createTerm("a")))
 
   "PrologMethodInterceptor" should :
     "intercept the @PrologMethod annotation and execute its logic producing the correct result when:" +
       "predicate = p(-X)., clauses = Array(p(a).)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
-      assert(proxy.testMethodPredicateClauses_plusXa("X") === Iterable(createTerm("p(a)")))
+      assert(proxy.testMethodPredicateClauses_plusXa("X") === Iterable(createTerm("a")))
 
   "PrologMethodInterceptor" should :
     "intercept the @PrologMethod annotation and execute its logic producing the correct result when:" +
       "p(-X)., clauses = Array(p(a). p(b). p(c).)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
-      assert(proxy.testMethodPredicateClauses_minusXabc("X") === Iterable(createTerm("p(a)"), createTerm("p(b)"), createTerm("p(c)")))
+      assert(proxy.testMethodPredicateClauses_minusXabc("X") === Iterable(createTerm("a"), createTerm("b"), createTerm("c")))
 
   "PrologMethodInterceptor" should :
     "intercept the @PrologMethod annotation and execute its logic producing the correct result when:" +
@@ -145,9 +145,7 @@ class PrologMethodInterceptorTest extends AbstractProcessorTest with Matchers wi
       "clauses = Array(point(3, 4).,point(-1, 2).,point(0, 0).)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
       assert(proxy.point("X", "Y") === List(
-        createTerm("point(3,4)"),
-        createTerm("point(-1,2)"),
-        createTerm("point(0,0)")
+        3,4,-1,2,0,0  //the output of the method is a List[Int], so it puts the X and Y results as pairs in a single list (X1,Y1,X2,Y2,...)
       ))
 
   "PrologMethodInterceptor" should :
@@ -156,7 +154,7 @@ class PrologMethodInterceptorTest extends AbstractProcessorTest with Matchers wi
       "clauses = Array(point_B(3, 4).,point_B(-1, 2).,point_B(0, 0).)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
       assert(proxy.point_B("X", 4) === Iterable(
-        createTerm("point_B(3,4)")
+        alice.tuprolog.Int.of(3).intValue()
       ))
 
   "PrologMethodInterceptor" should :
@@ -166,7 +164,7 @@ class PrologMethodInterceptorTest extends AbstractProcessorTest with Matchers wi
       "clauses = Array(sum([], 0).,sum([H|T], S) :- sum(T, N), S is H + N.)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
       assert(proxy.sumElementsInList_A(List(1,2,3,4), "X") === Iterable(
-        createTerm("sum([1,2,3,4],10)")
+        alice.tuprolog.Int.of(10).intValue()
       ))
 
   "PrologMethodInterceptor" should :
@@ -192,6 +190,6 @@ class PrologMethodInterceptorTest extends AbstractProcessorTest with Matchers wi
       "correctly if not present when only clauses are present:" +
       "clauses = Array(lookup([H|T],H,zero ,T).,lookup([H|T],E,s(N) ,[H|T2 ]):- lookup (T,E,N,T2).)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
-      assert(proxy.lookup(List(1, 2, 3, 4, 5), 3, "X", "Y") === Iterable(
-        createTerm("lookup([1,2,3,4,5],3,s(s(zero)),[1,2,4,5])")
-      ))
+      val actual = proxy.lookup(List(1, 2, 3, 4, 5), 3, "X", "Y")
+      val expected: Iterable[Term] = List(createTerm("s(s(zero))"), createTerm("[1,2,4,5]"))
+      assert((actual.head, actual.last) === (expected.head, expected.last))

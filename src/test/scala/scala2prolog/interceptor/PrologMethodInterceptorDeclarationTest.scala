@@ -114,6 +114,15 @@ trait PrologMethodInterceptorDeclarationTest:
 
   @PrologMethod(
     clauses = Array(
+      "point(3, 4).",
+      "point(-1, 2).",
+      "point(0, 0)."
+    )
+  )
+  def pointA(x: String, y: String): Iterable[List[Term]] = null
+
+  @PrologMethod(
+    clauses = Array(
       "point_B(3, 4).",
       "point_B(-1, 2).",
       "point_B(0, 0)."
