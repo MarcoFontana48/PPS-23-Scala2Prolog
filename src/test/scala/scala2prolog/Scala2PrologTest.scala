@@ -18,12 +18,12 @@ class Scala2PrologTest extends AbstractTest with Logging:
 
       assert((prologResultB, prologResultA) === (
         Iterable(
-          Term.createTerm("methodB(c)"),
-          Term.createTerm("methodB(b)")
+          Term.createTerm("c"),
+          Term.createTerm("b")
         ),
         Iterable(
-          Term.createTerm("methodA(c)"),
-          Term.createTerm("methodA(a)")
+          Term.createTerm("c"),
+          Term.createTerm("a")
         ))
       )
 
@@ -33,7 +33,7 @@ class Scala2PrologTest extends AbstractTest with Logging:
       val proxy = newProxyInstanceOf(scala2PrologDeclarationTest)
       val prologResultC = proxy.methodC("X")
 
-      assert(prologResultC === Iterable(Term.createTerm("methodC(c)")))
+      assert(prologResultC === Iterable(Term.createTerm("c")))
 
   "Scala2Prolog" should :
     "not consider @PrologClass' clauses if empty, and parse only @PrologMethod's clauses instead" in :
@@ -44,10 +44,10 @@ class Scala2PrologTest extends AbstractTest with Logging:
 
       assert((prologResultB, prologResultA) === (
         Iterable(
-          Term.createTerm("methodB(b)")
+          Term.createTerm("b")
         ),
         Iterable(
-          Term.createTerm("methodA(a)")
+          Term.createTerm("a")
         ))
       )
 
@@ -63,7 +63,7 @@ class Scala2PrologTest extends AbstractTest with Logging:
   "Scala2Prolog" should :
     "add @PrologAddSharedClauses' clauses along with @PrologClass's clauses when invoking the method, plus " +
     "executing @PrologAddSharedClauses method's body" in :
-      //@PrologClass clauses are 'Array("methodA(c).","methodB(c).")'
+      //@PrologClass clauses are 'Array("methodA(c).","(c).")'
       val scala2PrologDeclarationTest = Scala2PrologDeclarationTestBNonEmptyClausesImpl().asInstanceOf[Scala2PrologDeclarationTestB]
       val proxy = newProxyInstanceOf(scala2PrologDeclarationTest)
       val prologResultA = proxy.methodA("X")                    // ?- methodA(X). CURRENT_THEORY: methodA(c)
@@ -73,10 +73,10 @@ class Scala2PrologTest extends AbstractTest with Logging:
       val prologResultD = proxy.methodA("X")                    // ?- methodA(X). CURRENT_THEORY: methodA(c), methodA(a), methodA(b)
 
       assert((prologResultA, prologResultB, prologResultC, prologResultD) === (
-        Iterable(Term.createTerm("methodA(c)")),
-        Iterable(Term.createTerm("methodA(c)"), Term.createTerm("methodA(a)")),
+        Iterable(Term.createTerm("c")),
+        Iterable(Term.createTerm("c"), Term.createTerm("a")),
         3,
-        Iterable(Term.createTerm("methodA(c)"), Term.createTerm("methodA(a)"), Term.createTerm("methodA(b)"))
+        Iterable(Term.createTerm("c"), Term.createTerm("a"), Term.createTerm("b"))
       ))
 
   "Scala2Prolog" should :
@@ -93,9 +93,9 @@ class Scala2PrologTest extends AbstractTest with Logging:
 
       assert((prologResultA, prologResultB, prologResultC, prologResultD) === (
         Iterable.empty,
-        Iterable(Term.createTerm("methodA(a)")),
+        Iterable(Term.createTerm("a")),
         3,
-        Iterable(Term.createTerm("methodA(a)"), Term.createTerm("methodA(b)"))
+        Iterable(Term.createTerm("a"), Term.createTerm("b"))
       ))
 
   "Scala2Prolog" should :
@@ -112,9 +112,9 @@ class Scala2PrologTest extends AbstractTest with Logging:
 
       assert((prologResultA, prologResultB, prologResultC, prologResultD) === (
         Iterable.empty,
-        Iterable(Term.createTerm("methodA(a)")),
+        Iterable(Term.createTerm("a")),
         3,
-        Iterable(Term.createTerm("methodA(a)"), Term.createTerm("methodA(b)"))
+        Iterable(Term.createTerm("a"), Term.createTerm("b"))
       ))
 
   "Scala2Prolog" should :
@@ -131,6 +131,34 @@ class Scala2PrologTest extends AbstractTest with Logging:
       assert(prologResult === Iterable(
         Term.createTerm("memberNested(a,[[a,b],[c,d]])")
       ))
+
+  "Scala2Prolog" should :
+    "use type inference to understand the return type for single outputs" in :
+      val scala2PrologDeclarationTest = Scala2PrologDeclarationTestInferenceImpl().asInstanceOf[Scala2PrologDeclarationTestInference]
+      val proxy = newProxyInstanceOf(scala2PrologDeclarationTest)
+      val actual_int = proxy.num_int("X")
+      val expected_int = 1
+      val actual_num_double = proxy.num_double("X")
+      val expected_num_double = 1.23
+      val actual_str = proxy.str("X")
+      val expected_str = "abc"
+      val actual_bool = proxy.bool("X")
+      val expected_bool = true
+      assert((actual_int, actual_num_double, actual_str, actual_bool) === (1, 1.23, "abc", true))
+
+  "Scala2Prolog" should :
+    "use type inference to understand the return type for multiple outputs" in :
+      val scala2PrologDeclarationTest = Scala2PrologDeclarationTestInferenceImpl().asInstanceOf[Scala2PrologDeclarationTestInference]
+      val proxy = newProxyInstanceOf(scala2PrologDeclarationTest)
+      val actual_int = proxy.list_num_int("X","Y")
+      val expected_int = Iterable(1, 2)
+      val actual_double = proxy.list_num_double("X","Y")
+      val expected_double = Iterable(1.23, 2.23)
+      val actual_str = proxy.list_str("X","Y")
+      val expected_str = Iterable(Term.createTerm("abc"), Term.createTerm("def"))
+      val actual_bool = proxy.list_bool("X","Y")
+      val expected_bool = Iterable(true, false)
+      assert((actual_int, actual_double, actual_str, actual_bool) === (expected_int, expected_double, expected_str, expected_bool))
 
 
 
@@ -168,9 +196,9 @@ class Scala2PrologTest extends AbstractTest with Logging:
       activeActions = pathFindingAlgorithmProxy.addActionDown(activeActions)
       val upRightDownActionsActiveActual = pathFindingAlgorithmProxy.find_plan(List(1, 1), List(2, 2), "Plan")
       val upRightDownActionsActiveExpected = Iterable(
-        Term.createTerm("find_plan([1,1],[2,2],[right,down])"),
-        Term.createTerm("find_plan([1,1],[2,2],[down,right])"),
-        Term.createTerm("find_plan([1,1],[2,2],[down,down,right,up])")
+        Term.createTerm("[right,down]"),
+        Term.createTerm("[down,right]"),
+        Term.createTerm("[down,down,right,up]")
       )
 
       logger.trace(s"currently active actions: $activeActions")
@@ -179,14 +207,14 @@ class Scala2PrologTest extends AbstractTest with Logging:
       logger.trace(s"currently active actions: $activeActions")
       val allActionsActiveActual = pathFindingAlgorithmProxy.find_plan(List(1, 1), List(2, 2), "Plan")
       val allActionsActiveExpected = Iterable(
-        Term.createTerm("find_plan([1,1],[2,2],[right,right,down,down,left,up])"),
-        Term.createTerm("find_plan([1,1],[2,2],[right,right,down,down,left,left,up,right])"),
-        Term.createTerm("find_plan([1,1],[2,2],[right,right,down,left])"),
-        Term.createTerm("find_plan([1,1],[2,2],[right,down])"),
-        Term.createTerm("find_plan([1,1],[2,2],[down,right])"),
-        Term.createTerm("find_plan([1,1],[2,2],[down,down,right,up])"),
-        Term.createTerm("find_plan([1,1],[2,2],[down,down,right,right,up,up,left,down])"),
-        Term.createTerm("find_plan([1,1],[2,2],[down,down,right,right,up,left])")
+        Term.createTerm("[right,right,down,down,left,up]"),
+        Term.createTerm("[right,right,down,down,left,left,up,right]"),
+        Term.createTerm("[right,right,down,left]"),
+        Term.createTerm("[right,down]"),
+        Term.createTerm("[down,right]"),
+        Term.createTerm("[down,down,right,up]"),
+        Term.createTerm("[down,down,right,right,up,up,left,down]"),
+        Term.createTerm("[down,down,right,right,up,left]")
       )
 
       assert((upRightActionsActiveActual, upRightDownActionsActiveActual, allActionsActiveActual) === (upRightActionsActiveExpected, upRightDownActionsActiveExpected, allActionsActiveExpected))

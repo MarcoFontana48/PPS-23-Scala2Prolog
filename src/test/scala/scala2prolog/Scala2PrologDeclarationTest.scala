@@ -60,3 +60,43 @@ trait Scala2PrologDeclarationTestC:
   def memberNested(x: String, y: List[List[String]]): Iterable[Term] = null
 
 class Scala2PrologDeclarationTestCImpl extends Scala2PrologDeclarationTestC
+
+
+
+trait Scala2PrologDeclarationTestInference:
+
+  @PrologMethod
+  def num_int(x: String): Int = -1 // method will be intercepted and its body will be ignored
+
+  @PrologMethod
+  def num_double(x: String): Double = -1 // method will be intercepted and its body will be ignored
+
+  @PrologMethod
+  def bool(x: String): Boolean = false // method will be intercepted and its body will be ignored
+
+  @PrologMethod
+  def str(x: String): String = null // method will be intercepted and its body will be ignored
+
+  @PrologMethod
+  def list_num_int(x: String, y: String): Iterable[Int] = null // method will be intercepted and its body will be ignored
+
+  @PrologMethod
+  def list_num_double(x: String, y: String): Iterable[Double] = null // method will be intercepted and its body will be ignored
+
+  @PrologMethod
+  def list_bool(x: String, y: String): Iterable[Boolean] = null // method will be intercepted and its body will be ignored
+
+  @PrologMethod
+  def list_str(x: String, y: String): Iterable[String] = null // method will be intercepted and its body will be ignored
+
+@PrologClass(clauses = Array(
+  "num_int(1).",
+  "num_double(1.23).",
+  "str(abc).",
+  "bool(true).",
+  "list_num_int(1,2).",
+  "list_num_double(1.23, 2.23).",
+  "list_bool(true, false).",
+  "list_str(abc, def).",
+))
+class Scala2PrologDeclarationTestInferenceImpl extends Scala2PrologDeclarationTestInference
