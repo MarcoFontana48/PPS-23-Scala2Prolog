@@ -29,5 +29,5 @@ eseguibile, si è utilizzato il sistema di _'GitHub Actions'_ per permette di es
 progetto sui principali sistemi operativi: _'Linux'_, _'macOS'_ e _'Windows'_.
 
 [Torna al sommario](../index.md) |
-[Capitolo precedente](../1-introduction/index.md) |
-[Capitolo successivo](../3-requirements/index.md)
+[Capitolo precedente (introduzione)](../1-introduction/index.md) |
+[Capitolo successivo (requisiti di sistema)](../3-system-requirements/index.md)

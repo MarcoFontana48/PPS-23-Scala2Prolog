@@ -10,4 +10,4 @@ Il risultato permette di scrivere metodi e classi Scala che possono verificare _
 Prolog definiti nell'annotazione, e restituirne le soluzioni.
 
 [Torna al sommario](../index.md) |
-[Capitolo successivo](../2-development-process/index.md)
+[Capitolo successivo (processo di sviluppo)](../2-development-process/index.md)
