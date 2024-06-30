@@ -25,7 +25,7 @@ abstract class PrologAddSharedClausesUtils
   /**
    * Extract the clauses from the annotation.
    *
-   * @param prologClass a Scala2Prolog annotation.
+   * @param prologAddClassClauses a Scala2Prolog annotation.
    * @return the extracted and parsed clauses of the annotation
    */
   override def extractClauses(prologAddClassClauses: PrologAddSharedClauses): Option[Clauses] =
