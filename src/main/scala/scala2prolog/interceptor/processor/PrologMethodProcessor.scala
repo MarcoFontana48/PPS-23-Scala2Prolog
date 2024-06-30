@@ -19,7 +19,8 @@ object PrologMethodProcessor:
 
 case class PrologMethodProcessor(classClauses: Option[Clauses])
   extends PrologMethodUtils
-  with PrologAnnotationExecutor:
+  with PrologAnnotationExecutor
+  with PrologProcessor:
   /**
    * Executes the @PrologMethod annotation, by extracting its method fields and the annotated method's arguments and
    * parsing them to extract and query its theory.

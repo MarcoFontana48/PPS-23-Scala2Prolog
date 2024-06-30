@@ -6,4 +6,6 @@ import scala2prolog.interceptor.processor.extractor.PrologClassUtils
 /**
  * handle the methods annotated with @PrologClass.
  */
-object PrologClassProcessor extends PrologClassUtils
+object PrologClassProcessor
+  extends PrologClassUtils
+  with PrologProcessor

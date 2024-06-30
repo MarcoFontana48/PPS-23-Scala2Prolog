@@ -15,7 +15,8 @@ object PrologAddSharedClausesProcessor:
 
 case class PrologAddSharedClausesProcessor(classClauses: Option[Clauses], originalObject: Any)
   extends PrologAddSharedClausesUtils
-    with PrologBodyMethodExecutor:
+  with PrologBodyMethodExecutor
+  with PrologProcessor:
 
   def addClassClauses(method: Method): Option[Clauses] =
     val prologMethodAnnotation = method.getAnnotation(classOf[PrologAddSharedClauses])
