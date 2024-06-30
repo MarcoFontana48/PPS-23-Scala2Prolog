@@ -32,10 +32,10 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
     // extracts the fields of the @PrologMethod annotation, then set the theory and solve the goal using tuProlog
     val prologMethodAnnotation = method.getAnnotation(classOf[PrologMethod])
     val fields = extractMethodFields(prologMethodAnnotation)
-    val rules = fields.generateRules
-    val goal = fields.generateGoal(Option(args), method)
+    val rules = generateRules(fields)
+    val goal = generateGoal(Option(args), method, fields)
     val solutions = computeAllSolutions(rules, goal)
-    fields formatOutput solutions
+    formatOutput(solutions, fields)
 
   /**
    * Generates rules from the extracted fields of the @PrologMethod annotation.
@@ -43,7 +43,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
    * @param fields a map containing the extracted values of method fields of the @PrologMethod annotation.
    * @return a string containing the clauses to set as theory.
    */
-  extension (fields: PrologAnnotationFields) private def generateRules: String =
+  private def generateRules(fields: PrologAnnotationFields): String =
     fields.get("clauses").flatten match
       case Some(clauses: Clauses) => clauses.value.mkString(" ")
       case _ => ""  // in case clauses are not present, return an empty string
@@ -56,7 +56,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
    * @param method a Method that represents the method annotated with @PrologMethod.
    * @return a Term containing the goal to solve.
    */
-  extension (fields: PrologAnnotationFields) private def generateGoal(args: Option[Array[AnyRef]], method: Method): Term =
+  private def generateGoal(args: Option[Array[AnyRef]], method: Method, fields: PrologAnnotationFields): Term =
     /**
      * Method to replace the input variables of the predicate with the input values of the method annotated
      * with @PrologMethod.
@@ -242,7 +242,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
    * @param solveInfos an Iterable containing the solutions of the goal.
    * @return an Iterable (or the return type specified in the annotation) containing the solutions.
    */
-  extension (fields: PrologAnnotationFields) private def formatOutput(solveInfos: Iterable[SolveInfo]): Iterable[Term] =
+  private def formatOutput(solveInfos: Iterable[SolveInfo], fields: PrologAnnotationFields): Iterable[Term] =
     val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
     val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
 
