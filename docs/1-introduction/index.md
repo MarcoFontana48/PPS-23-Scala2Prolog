@@ -9,5 +9,5 @@ la programmazione funzionale del linguaggio Scala, integrando i due paradigmi.
 Il risultato permette di scrivere metodi e classi Scala che possono verificare _goal_ basandosi su _fatti_ e _regole_ 
 Prolog definiti nell'annotazione, e restituirne le soluzioni.
 
-[Back to index](../index.md) |
-[Next Chapter](../2-tmp/index.md)
+[Torna al sommario](../index.md) |
+[Capitolo successivo](../2-development-process/index.md)
