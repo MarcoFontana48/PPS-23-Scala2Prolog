@@ -89,6 +89,12 @@ trait Scala2PrologDeclarationTestInference:
   @PrologMethod
   def list_str(x: String, y: String): Iterable[String] = null // method will be intercepted and its body will be ignored
 
+  @PrologMethod
+  def num_int(): Int = -1 // method will be intercepted and its body will be ignored
+
+  @PrologMethod 
+  def list_str(): Iterable[String] = null // method will be intercepted and its body will be ignored
+  
 @PrologClass(clauses = Array(
   "num_int(1).",
   "num_double(1.23).",
