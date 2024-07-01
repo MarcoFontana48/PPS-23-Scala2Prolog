@@ -261,24 +261,31 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
       case _ =>
         solveInfos.map(_.getSolution)
 
+  opaque type toScalaTypeMap = Map[Class[?], Term ⇒ Any]
+
   /**
    * Infers the return type based on the Scala method's return type and arguments.
    *
    * @return the solution using the inferred return type.
    */
   private def inferReturnType(solveInfos: Iterable[SolveInfo], method: Method, args: Array[AnyRef]) =
+    // extracts the prolog variables from the method arguments by checking what arguments start with an uppercase Character
     val prologVarsFromArgs: List[String] = args.filterNot(arg => arg.isInstanceOf[Iterable[_]]).map(_.toString).filter(_.matches("^[A-Z].*")).toList
 
+    // if the method has boolean return type and no Prolog variables as arguments, return a boolean value that
+    // represents the success of the goal. Else infer the return type.
     if prologVarsFromArgs.isEmpty then
       if method.getReturnType == classOf[Boolean] then solveInfos.head.isSuccess else solveInfos.map(_.getSolution)
     else
-      val returnTypeToTermFn: Map[Class[_], alice.tuprolog.Term => Any] = Map(
+      // map the tuProlog Term to the corresponding Scala type
+      val returnTypeToTermFn: toScalaTypeMap = Map(
         classOf[Int] -> (_.castTo(classOf[alice.tuprolog.Int]).intValue()),
         classOf[Double] -> (_.castTo(classOf[alice.tuprolog.Double]).doubleValue()),
         classOf[Boolean] -> (_.isEqual(Term.createTerm("true"))),
         classOf[String] -> (_.toString),
       )
 
+      // return the inferred return type
       returnTypeToTermFn.get(method.getReturnType) match
         case Some(termToValue) =>
           termToValue(solveInfos.head.getTerm(prologVarsFromArgs.head))
