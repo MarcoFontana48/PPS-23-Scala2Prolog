@@ -62,5 +62,5 @@ tramite Scala definiscono il goal da utilizzare per ricavare le soluzioni.
 Altri esempi sono disponibili nei test che sono stati utilizzati per verificare il corretto funzionamento della libreria.
 
 [Torna al sommario](../index.md) |
-[Capitolo precedente (design)](../5-implementation/index.md) |
+[Capitolo precedente (implementazione)](../5-implementation/index.md) |
 [Capitolo successivo (conclusione)](../7-conclusion/index.md)

@@ -118,7 +118,7 @@ l'esecuzione della soluzione del goal Prolog solo quando richiesta (cioè solo q
 Di seguito la porzione del metodo _'computeAllSolutions'_ della classe _'PrologMethodProcessor'_ citata, che calcola
 le soluzioni del goal Prolog solo fino a quando sono 'successi' e in modo lazy:
 
-```scala 3
+``` scala
 // Compute the goal solutions
 // - get the first solution
 logger.debug(s"Solving goal: $goal")
