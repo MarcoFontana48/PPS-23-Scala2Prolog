@@ -220,3 +220,26 @@ class Scala2PrologTest extends AbstractTest with Logging:
 
       assert((upRightActionsActiveActual, upRightDownActionsActiveActual, allActionsActiveActual) === (upRightActionsActiveExpected, upRightDownActionsActiveExpected, allActionsActiveExpected))
 
+  "The N Queens problem" should :
+    "return all the positions for 6 queens" in :
+      val scala2PrologDeclarationNQueensTest = Scala2PrologDeclarationNPiecesTestImpl().asInstanceOf[Scala2PrologDeclarationNPIecesTest]
+      val proxy = newProxyInstanceOf(scala2PrologDeclarationNQueensTest)
+      val actual = proxy.n_queens(6, "Positions")
+      val expected = List(
+        Term.createTerm("[2,4,6,1,3,5]"),
+        Term.createTerm("[3,6,2,5,1,4]"),
+        Term.createTerm("[4,1,5,2,6,3]"),
+        Term.createTerm("[5,3,1,6,4,2]")
+      )
+      assert(actual === expected)
+
+  "The N Rooks problem" should :
+    "return all the positions for 2 rooks" in :
+      val scala2PrologDeclarationNQueensTest = Scala2PrologDeclarationNPiecesTestImpl().asInstanceOf[Scala2PrologDeclarationNPIecesTest]
+      val proxy = newProxyInstanceOf(scala2PrologDeclarationNQueensTest)
+      val actual = proxy.n_rooks(2, "Positions")
+      val expected = List(
+        Term.createTerm("[1,2]"),
+        Term.createTerm("[2,1]"),
+      )
+      assert(actual === expected)
