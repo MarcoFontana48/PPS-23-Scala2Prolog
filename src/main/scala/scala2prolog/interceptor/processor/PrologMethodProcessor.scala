@@ -254,37 +254,46 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
     val listContentPattern = "List\\[(.*)]".r
     val outputTypes = signatures.outputVars.indices.map(idx => types.values(lastInputVarIndex + idx + 1))
 
-    def castTermToType(termAsList: List[String], typeName: String): Any = typeName match 
-      case "Int" => termAsList.map(_.toInt)
-      case "Double" => termAsList.map(_.toDouble)
-      case "Boolean" => termAsList.map(_.toBoolean)
-      case "String" => termAsList
-      case _ => termAsList
-    
     outputTypes match
       case types if types forall (_ matches listContentPattern.pattern.pattern()) =>
+
+        /**
+         * Processes the return type specified in the @PrologMethod annotation.
+         *
+         * @param listTypes a list of types written as strings.
+         * @return the solution using the return type specified in the annotation.
+         */
+        def processReturnType(listTypes: IndexedSeq[String]) =
+          val castTermToType: (List[String], String) => Any = (termAsList, typeName) => typeName match
+            case "Int" => termAsList.map(_.toInt)
+            case "Double" => termAsList.map(_.toDouble)
+            case "Boolean" => termAsList.map(_.toBoolean)
+            case "String" => termAsList
+            case _ => termAsList
+
+          // method's body
+          // extracts the terms from the solveInfos and casts them to the corresponding Scala type
+          solveInfos.flatMap { info =>
+            listTypes.map { stringType =>
+              val term = info.getTerm(signatures.outputVars(listTypes.indexOf(stringType)))
+              logger.trace(s"extracted term from solveInfo: $term")
+              val pattern = "\\[(.*)]".r
+              val elements = term.toString match {
+                case pattern(elementsStr) => elementsStr.split(",").map(_.trim).filter(_.nonEmpty).toList
+                case _ => List.empty[String]
+              }
+              castTermToType(elements, stringType)
+            }
+          }.toList
+
+        // case body:
+        // extracts the element types written as strings
+        logger.trace(s"current types is a list of types written as strings: $types")
         val listTypes = types.map {
           case listContentPattern(listType) => listType
-          case _ => ""
         }
-        logger.info(listTypes)
-        solveInfos.flatMap(info => {
-          listTypes.map(stringType => {
-            val a = info.getTerm(signatures.outputVars(listTypes.indexOf(stringType)))
-            logger.info(a)
-            val pattern = "\\[(.*)]".r
-            val elements = a.toString match {
-              case pattern(elementsStr) => elementsStr  // elementsStr is formatted like: "[a, b, c]"
-                .split(",")
-                .map(_.trim)
-                .filter(_.nonEmpty)
-                .toList
-              case _ => List.empty[String]
-            }
-            logger.info(elements)
-            castTermToType(elements, stringType)
-          })
-        }).toList
+        logger.trace(s"removed 'List' from previous 'List(...)' elements, leaving only the type written as string: $listTypes")
+        processReturnType(listTypes)
       case _ =>
         solveInfos.map(_.getSolution).toList
 
