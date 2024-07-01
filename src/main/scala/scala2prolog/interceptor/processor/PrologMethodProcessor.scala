@@ -7,7 +7,7 @@ import scala2prolog.interceptor.processor.extractor.PrologMethodUtils
 
 import alice.tuprolog.{Prolog, SolveInfo, Term, Theory}
 
-import java.lang.reflect.{Method, ParameterizedType}
+import java.lang.reflect.Method
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
@@ -36,7 +36,13 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
     val rules = generateRules(fields)
     val goal = generateGoal(Option(args), method, fields)
     val solutions = computeAllSolutions(rules, goal)
-    formatOutput(solutions, method, args, fields)
+    
+    // formats the output based on the return type specified in the annotation or inferred from the method
+    val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
+    val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
+    (typesOption, signaturesOption) match
+      case (Some(types), Some(signatures)) => processTypesAndSignatures(solutions, types, signatures)
+      case _ => inferReturnType(solutions, method, args)
 
   /**
    * Generates rules from the extracted fields of the @PrologMethod annotation.
@@ -236,17 +242,6 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
       logger.trace(s"\nSolution ${index + 1} found:\n$solveInfo")
       solveInfo
 
-  /**
-   * Formats the return type of the solutions based on what was declared in the annotation.
-   *
-   * @param fields     a map containing the extracted values of method fields of the @PrologMethod annotation.
-   * @param solveInfos an Iterable containing the solutions of the goal.
-   * @return an Iterable (or the return type specified in the annotation) containing the solutions.
-   */
-  private def formatOutput(solveInfos: Iterable[SolveInfo], method: Method, args: Array[AnyRef], fields: PrologAnnotationFields): Any = 
-    val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
-    val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
-
     /**
      * Processes the types and signatures of the @PrologMethod annotation to extract the return type.
      *
@@ -254,53 +249,47 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
      * @param signatures a Signature that represents the signatures field of the @PrologMethod annotation.
      * @return the solution using the return type specified in the annotation.
      */
-    def processTypesAndSignatures(types: Types, signatures: Signature) = 
-      val lastInputVarIndex = signatures.inputVars.length - 1
-      val listContentPattern = "List\\[(.*)]".r
-      val outputTypes = signatures.outputVars.indices.map(idx => types.values(lastInputVarIndex + idx + 1))
+  private def processTypesAndSignatures(solveInfos: Iterable[SolveInfo], types: Types, signatures: Signature) =
+    val lastInputVarIndex = signatures.inputVars.length - 1
+    val listContentPattern = "List\\[(.*)]".r
+    val outputTypes = signatures.outputVars.indices.map(idx => types.values(lastInputVarIndex + idx + 1))
 
-      outputTypes match 
-        case types if types forall (_ matches listContentPattern.pattern.pattern()) =>
-          val listTypes = types.map { case listContentPattern(listType) => listType; case _ => "" }
-          solveInfos.flatMap(info => signatures.outputVars.map(info.getTerm)).toList
-        case _ =>
-          solveInfos.map(_.getSolution)
-    
-    /**
-     * Infers the return type based on the Scala method's return type and arguments.
-     *
-     * @return the solution using the inferred return type.
-     */
-    def inferReturnType() = 
-      val prologVarsFromArgs: List[String] = args.filterNot(arg => arg.isInstanceOf[Iterable[_]]).map(_.toString).filter(_.matches("^[A-Z].*")).toList
+    outputTypes match
+      case types if types forall (_ matches listContentPattern.pattern.pattern()) =>
+        val listTypes = types.map { case listContentPattern(listType) => listType; case _ => "" }
+        solveInfos.flatMap(info => signatures.outputVars.map(info.getTerm)).toList
+      case _ =>
+        solveInfos.map(_.getSolution)
 
-      if prologVarsFromArgs.isEmpty then
-        if method.getReturnType == classOf[Boolean] then solveInfos.head.isSuccess else solveInfos.map(_.getSolution)
-      else 
-        val returnTypeToTermFn: Map[Class[_], alice.tuprolog.Term => Any] = Map(
-          classOf[Int] -> (_.castTo(classOf[alice.tuprolog.Int]).intValue()),
-          classOf[Double] -> (_.castTo(classOf[alice.tuprolog.Double]).doubleValue()),
-          classOf[Boolean] -> (_.isEqual(Term.createTerm("true"))),
-          classOf[String] -> (_.toString),
-        )
+  /**
+   * Infers the return type based on the Scala method's return type and arguments.
+   *
+   * @return the solution using the inferred return type.
+   */
+  private def inferReturnType(solveInfos: Iterable[SolveInfo], method: Method, args: Array[AnyRef]) =
+    val prologVarsFromArgs: List[String] = args.filterNot(arg => arg.isInstanceOf[Iterable[_]]).map(_.toString).filter(_.matches("^[A-Z].*")).toList
 
-        returnTypeToTermFn.get(method.getReturnType) match 
-          case Some(termToValue) =>
-            termToValue(solveInfos.head.getTerm(prologVarsFromArgs.head))
-          case None =>
-            solveInfos.flatMap { info =>
-              prologVarsFromArgs.flatMap { varName =>
-                info.getTerm(varName) match
-                  case term: alice.tuprolog.Int => Some(term.intValue())
-                  case term: alice.tuprolog.Double => Some(term.doubleValue())
-                  case term if term.isEqual(Term.createTerm("true")) => Some(true)
-                  case term if term.isEqual(Term.createTerm("false")) => Some(false)
-                  case term: Term ⇒ Some(term)
-              }
+    if prologVarsFromArgs.isEmpty then
+      if method.getReturnType == classOf[Boolean] then solveInfos.head.isSuccess else solveInfos.map(_.getSolution)
+    else
+      val returnTypeToTermFn: Map[Class[_], alice.tuprolog.Term => Any] = Map(
+        classOf[Int] -> (_.castTo(classOf[alice.tuprolog.Int]).intValue()),
+        classOf[Double] -> (_.castTo(classOf[alice.tuprolog.Double]).doubleValue()),
+        classOf[Boolean] -> (_.isEqual(Term.createTerm("true"))),
+        classOf[String] -> (_.toString),
+      )
+
+      returnTypeToTermFn.get(method.getReturnType) match
+        case Some(termToValue) =>
+          termToValue(solveInfos.head.getTerm(prologVarsFromArgs.head))
+        case None =>
+          solveInfos.flatMap { info =>
+            prologVarsFromArgs.flatMap { varName =>
+              info.getTerm(varName) match
+                case term: alice.tuprolog.Int => Some(term.intValue())
+                case term: alice.tuprolog.Double => Some(term.doubleValue())
+                case term if term.isEqual(Term.createTerm("true")) => Some(true)
+                case term if term.isEqual(Term.createTerm("false")) => Some(false)
+                case term: Term ⇒ Some(term)
             }
-    
-    (typesOption, signaturesOption) match {
-      case (Some(types), Some(signatures)) => processTypesAndSignatures(types, signatures)
-      case _ => inferReturnType()
-    }
-
+          }
