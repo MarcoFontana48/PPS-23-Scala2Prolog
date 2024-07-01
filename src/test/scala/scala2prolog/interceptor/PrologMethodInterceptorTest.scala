@@ -70,6 +70,7 @@ class PrologMethodInterceptorTest extends AbstractProcessorTest with Matchers wi
       ))
 
   "PrologMethodInterceptor" should :
+
     "intercept the @PrologMethod annotation and execute its logic producing the correct result when:" +
       "predicate = permutation(+X,-Y)," +
       "signature = (X) -> {Y}," +
@@ -77,12 +78,12 @@ class PrologMethodInterceptorTest extends AbstractProcessorTest with Matchers wi
       "clauses = Array(any([X|Xs],X,Xs).,any([X|Xs],E,[X|Ys]):-any(Xs,E,Ys).,permutation([],[]).,permutation(Xs,[X|Ys]):-any(Xs,X,Zs), permutation(Zs,Ys).)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
       assert(proxy.testMethodPredicatePermutations_B(List(1, 2, 3)) === List(
-        createTerm("[1,2,3]"),
-        createTerm("[1,3,2]"),
-        createTerm("[2,1,3]"),
-        createTerm("[2,3,1]"),
-        createTerm("[3,1,2]"),
-        createTerm("[3,2,1]")
+        List(1,2,3),
+        List(1,3,2),
+        List(2,1,3),
+        List(2,3,1),
+        List(3,1,2),
+        List(3,2,1)
       ))
 
   "PrologMethodInterceptor" should :
@@ -93,12 +94,12 @@ class PrologMethodInterceptorTest extends AbstractProcessorTest with Matchers wi
       "clauses = Array(any([X|Xs],X,Xs).,any([X|Xs],E,[X|Ys]):-any(Xs,E,Ys).,permutation([],[]).,permutation(Xs,[X|Ys]):-any(Xs,X,Zs), permutation(Zs,Ys).)" in :
       val proxy = create(PrologMethodInterceptorDeclarationTestImpl().asInstanceOf[PrologMethodInterceptorDeclarationTest])
       assert(proxy.testMethodPredicatePermutations_C(List("a","b","c")) === List(
-        createTerm("[a,b,c]"),
-        createTerm("[a,c,b]"),
-        createTerm("[b,a,c]"),
-        createTerm("[b,c,a]"),
-        createTerm("[c,a,b]"),
-        createTerm("[c,b,a]")
+        List("a","b","c"),
+        List("a","c","b"),
+        List("b","a","c"),
+        List("b","c","a"),
+        List("c","a","b"),
+        List("c","b","a")
       ))
 
   "PrologMethodInterceptor" should :

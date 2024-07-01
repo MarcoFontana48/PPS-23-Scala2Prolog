@@ -249,20 +249,47 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
      * @param signatures a Signature that represents the signatures field of the @PrologMethod annotation.
      * @return the solution using the return type specified in the annotation.
      */
-  private def processTypesAndSignatures(solveInfos: Iterable[SolveInfo], types: Types, signatures: Signature) =
+  private def processTypesAndSignatures(solveInfos: Iterable[SolveInfo], types: Types, signatures: Signature): List[Any] =
     val lastInputVarIndex = signatures.inputVars.length - 1
     val listContentPattern = "List\\[(.*)]".r
     val outputTypes = signatures.outputVars.indices.map(idx => types.values(lastInputVarIndex + idx + 1))
 
+    def castTermToType(termAsList: List[String], typeName: String): Any = typeName match 
+      case "Int" => termAsList.map(_.toInt)
+      case "Double" => termAsList.map(_.toDouble)
+      case "Boolean" => termAsList.map(_.toBoolean)
+      case "String" => termAsList
+      case _ => termAsList
+    
     outputTypes match
       case types if types forall (_ matches listContentPattern.pattern.pattern()) =>
-        val listTypes = types.map { case listContentPattern(listType) => listType; case _ => "" }
-        solveInfos.flatMap(info => signatures.outputVars.map(info.getTerm)).toList
+        val listTypes = types.map {
+          case listContentPattern(listType) => listType
+          case _ => ""
+        }
+        logger.info(listTypes)
+        solveInfos.flatMap(info => {
+          listTypes.map(stringType => {
+            val a = info.getTerm(signatures.outputVars(listTypes.indexOf(stringType)))
+            logger.info(a)
+            val pattern = "\\[(.*)]".r
+            val elements = a.toString match {
+              case pattern(elementsStr) => elementsStr  // elementsStr is formatted like: "[a, b, c]"
+                .split(",")
+                .map(_.trim)
+                .filter(_.nonEmpty)
+                .toList
+              case _ => List.empty[String]
+            }
+            logger.info(elements)
+            castTermToType(elements, stringType)
+          })
+        }).toList
       case _ =>
-        solveInfos.map(_.getSolution)
+        solveInfos.map(_.getSolution).toList
 
-  opaque type toScalaTypeMap = Map[Class[?], Term ⇒ Any]
 
+  opaque type toScalaTypeMap = Map[Class[?], Term => Any]
   /**
    * Infers the return type based on the Scala method's return type and arguments.
    *
@@ -297,6 +324,6 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
                 case term: alice.tuprolog.Double => Some(term.doubleValue())
                 case term if term.isEqual(Term.createTerm("true")) => Some(true)
                 case term if term.isEqual(Term.createTerm("false")) => Some(false)
-                case term: Term ⇒ Some(term)
+                case term: Term => Some(term)
             }
           }
