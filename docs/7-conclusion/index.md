@@ -5,4 +5,4 @@ diversi, la programmazione logica e la programmazione funzionale, permettendo di
 di entrambi.
 
 [Torna al sommario](../index.md) |
-[Capitolo precedente (implementazione)](../6-example/index.md) |
+[Capitolo precedente (esempio di utilizzo)](../6-example/index.md) |

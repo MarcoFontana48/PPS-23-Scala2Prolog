@@ -1,9 +1,9 @@
-# Esempio di applicazione
+# Esempio di utilizzo
 
 Un esempio di applicazione è stato realizzato per mostrare come sia possibile utilizzare la libreria per integrare 
 Prolog in un progetto Scala, implementando una variante del problema di scacchi delle N regine (NPieces):
 
-```scala 3
+``` scala
 trait NPieces:
   @PrologMethod(clauses = Array(
     "n_queens(N, Qs) :- range(1, N, Ns), permutation(Ns, Qs), safe(Qs).",
@@ -31,7 +31,8 @@ trait NPieces:
 ))
 class NPiecesImpl extends NPieces
 ```
-``` scala 3
+
+``` scala
 @main
 def main(): Unit =
   val proxy = newProxyInstanceOf(NPiecesImpl().asInstanceOf[NPieces])
@@ -62,4 +63,4 @@ Altri esempi sono disponibili nei test che sono stati utilizzati per verificare 
 
 [Torna al sommario](../index.md) |
 [Capitolo precedente (design)](../5-implementation/index.md) |
-[Capitolo successivo (esempio di utilizzo)](../7-conclusion/index.md)
+[Capitolo successivo (conclusione)](../7-conclusion/index.md)

@@ -1,6 +1,7 @@
 # Implementazione
 
-Praticamente ogni meccanismo avanzato di Scala che è stato affrontato durante il corso è stato utilizzato nel progetto
+Praticamente ogni meccanismo avanzato di Scala che è stato affrontato durante il corso è stato utilizzato nel progetto.
+
 In particolare, si è fatto uso di mixins, generics e laziness per rendere il codice più flessibile e performante.
 
 Di seguito gli esempi sull'utilizzo di ciascuno:
@@ -16,7 +17,7 @@ Di seguito un esempio per la classe _'PrologMethodProcessor'_ e _'PrologMethodEx
 ottengono diverse proprietà utili a estrarre ed eseguire le informazioni Prolog annotate, come descritto in
 precedenza:
 
-```scala 3
+``` scala
 case class PrologMethodProcessor(classClauses: Option[Clauses])
   extends PrologMethodExtractorUtils
   with PrologAnnotationExecutor
@@ -45,7 +46,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
       case _ => inferReturnType(solutions, method, args)
 ```
 
-```scala 3
+``` scala
 /**
  * Utility object to extract and parse the fields of @PrologMethod annotations.
  */
