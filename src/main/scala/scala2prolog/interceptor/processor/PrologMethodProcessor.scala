@@ -36,7 +36,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
     val rules = generateRules(fields)
     val goal = generateGoal(Option(args), method, fields)
     val solutions = computeAllSolutions(rules, goal)
-    
+
     // formats the output based on the return type specified in the annotation or inferred from the method
     val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
     val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
@@ -203,10 +203,10 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
         val theory = classClausesStr + rules
         logger.trace(s"concatenation of @PrologClass clauses '$classClausesStr' with @PrologMethod rules '$rules' to " +
           s"set new theory into the engine: '$theory'...")
-        engine.setTheory(Theory(theory))
+        engine.setTheory(Theory.parseLazilyWithStandardOperators(theory))
       else
         logger.trace(s"no @PrologClass clauses found, setting only @PrologMethod rules into the engine: '$rules'...")
-        engine.setTheory(Theory(rules))
+        engine.setTheory(Theory.parseLazilyWithStandardOperators(rules))
 
     setEngineTheory()
 
