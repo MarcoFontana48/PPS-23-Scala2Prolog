@@ -8,7 +8,7 @@ import scala2prolog.interceptor.processor.extractor.entity.{ClausesExtractor, Pr
 /**
  * Utility object to extract and parse the fields of @PrologMethod annotations.
  */
-abstract class PrologMethodUtils
+abstract class PrologMethodExtractorUtils
   extends ExtractorUtils[PrologMethod, PrologAnnotationFields]
     with SignatureExtractor[PrologMethod]
     with PredicateExtractor[PrologMethod]

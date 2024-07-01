@@ -3,7 +3,7 @@ package scala2prolog.interceptor.processor
 
 import scala2prolog.annotation.*
 import scala2prolog.interceptor.processor.executor.PrologAnnotationExecutor
-import scala2prolog.interceptor.processor.extractor.PrologMethodUtils
+import scala2prolog.interceptor.processor.extractor.PrologMethodExtractorUtils
 
 import alice.tuprolog.{Prolog, SolveInfo, Term, Theory}
 
@@ -18,7 +18,7 @@ object PrologMethodProcessor:
   def apply(classClauses: Option[Clauses]): PrologMethodProcessor = new PrologMethodProcessor(classClauses)
 
 case class PrologMethodProcessor(classClauses: Option[Clauses])
-  extends PrologMethodUtils
+  extends PrologMethodExtractorUtils
   with PrologAnnotationExecutor
   with PrologProcessor:
   /**
@@ -231,14 +231,14 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
         Some(solveInfo)
       case _ => None
 
-    //return the solutions by assembling previously declared functions and collecting them in an Iterable
+    //return the solutions by assembling previously declared functions and collecting them in a collection
     for
-      //iterate over each Try[SolveInfo] and its index in the LazyList
+      //iterate over each Try[SolveInfo] and its index in the LazyList. Take the results as long as they are successful
       (solveInfoTry, index) <- initializeLazyListFn(computeNextSolutionFn).takeWhile(_.isSuccess).zipWithIndex
       //convert the Try[SolveInfo] to an Option[SolveInfo] to check if it is a success and yield the SolveInfo
       solveInfo <- solveInfoTry.toOption if solveInfo.isSuccess
     yield
-      //yield the successful SolveInfo, collecting it into a resulting Iterable[SolveInfo]
+      //yield the successful SolveInfo, collecting it into a collection
       logger.trace(s"\nSolution ${index + 1} found:\n$solveInfo")
       solveInfo
 

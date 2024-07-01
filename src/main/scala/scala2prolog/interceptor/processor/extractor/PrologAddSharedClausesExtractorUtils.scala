@@ -8,7 +8,7 @@ import scala2prolog.interceptor.processor.extractor.entity.ClausesExtractor
 /**
  * utility methods to extract and parse the fields of an annotation.
  */
-abstract class PrologAddSharedClausesUtils
+abstract class PrologAddSharedClausesExtractorUtils
   extends ExtractorUtils[PrologAddSharedClauses, PrologAnnotationFields]
     with ClausesExtractor[PrologAddSharedClauses]:
   /**

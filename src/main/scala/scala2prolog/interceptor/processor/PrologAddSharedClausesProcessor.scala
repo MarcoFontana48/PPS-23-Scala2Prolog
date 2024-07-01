@@ -3,7 +3,7 @@ package scala2prolog.interceptor.processor
 
 import scala2prolog.annotation.{Clauses, PrologAddSharedClauses}
 import scala2prolog.interceptor.processor.executor.PrologBodyMethodExecutor
-import scala2prolog.interceptor.processor.extractor.PrologAddSharedClausesUtils
+import scala2prolog.interceptor.processor.extractor.PrologAddSharedClausesExtractorUtils
 
 import java.lang.reflect.Method
 
@@ -14,7 +14,7 @@ object PrologAddSharedClausesProcessor:
   def apply(classClauses: Option[Clauses], originalObject: Any): PrologAddSharedClausesProcessor = new PrologAddSharedClausesProcessor(classClauses, originalObject)
 
 case class PrologAddSharedClausesProcessor(classClauses: Option[Clauses], originalObject: Any)
-  extends PrologAddSharedClausesUtils
+  extends PrologAddSharedClausesExtractorUtils
   with PrologBodyMethodExecutor
   with PrologProcessor:
 

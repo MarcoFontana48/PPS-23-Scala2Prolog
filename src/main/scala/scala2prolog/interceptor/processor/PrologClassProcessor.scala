@@ -1,11 +1,11 @@
 package pps.exam.application
 package scala2prolog.interceptor.processor
 
-import scala2prolog.interceptor.processor.extractor.PrologClassUtils
+import scala2prolog.interceptor.processor.extractor.PrologClassExtractorUtils
 
 /**
  * handle the methods annotated with @PrologClass.
  */
 object PrologClassProcessor
-  extends PrologClassUtils
+  extends PrologClassExtractorUtils
   with PrologProcessor
