@@ -7,7 +7,8 @@ Di seguito alcuni esempi sull'utilizzo di ciascuno di essi:
 ## Mixins e Generics
 
 Diversi trait e classi astratte sono stati definiti per permettere l'implementazione di nuove funzionalità in modo
-modulare, utilizzando anche i _generics_ per generalizzarli.\
+modulare, utilizzando anche i _generics_ per generalizzarli.
+
 
 Di seguito un esempio della classe _'PrologMethodExtractorUtils'_ che mediante mixin
 ottiene diverse proprietà utili a estrarre ed eseguire le informazioni Prolog annotate, come descritto in
