@@ -63,13 +63,12 @@ def main(): Unit =
 
 In questo esempio, viene formulato il problema delle 'N regine' e una sua variante 'N torri', definendo due metodi
 `n_queens` e `n_rooks` annotati con `@PrologMethod` che calcolano le posizioni delle regine e delle torri 
-rispettivamente, in modo tale che non si attacchino tra di loro.
-Le regole definite all'interno dei metodi annotati con `@PrologMethod` non sono condivise con altri metodi.
+rispettivamente, in modo tale che non si attacchino tra di loro.\
+Si noti che le regole definite all'interno dei metodi annotati con `@PrologMethod` non sono condivise con altri metodi.
 
-La classe `NPiecesImpl` è annotata con `@PrologClass` e contiene le clausole Prolog necessarie per calcolare il numero
-di soluzioni possibili per il problema. Queste regole sono condivise tra tutti i metodi annotati con `@PrologMethod`
-che appartengono alla stessa classe e permettono di calcolare il numero di soluzioni possibili per il problema,
-considerando separatamente il problema delle regine e delle torri, in base al metodo che viene invocato.
+La classe `NPiecesImpl` è annotata con `@PrologClass` e contiene le clausole Prolog generali (che sono utilizzate nello
+specifico, dai metodi annotati) per calcolare le soluzioni del problema delle N regine ed N torri.\
+Queste regole sono condivise tra tutti i metodi annotati con `@PrologMethod` che appartengono alla stessa classe.
 
 I metodi `n_queens` e `n_rooks` definiscono solo le clausole, il nome del metodo Scala e gli argomenti definiscono il 
 goal da utilizzare per ricavare le soluzioni.
