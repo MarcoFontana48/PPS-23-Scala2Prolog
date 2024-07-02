@@ -7,42 +7,11 @@ Di seguito alcuni esempi sull'utilizzo di ciascuno di essi:
 ## Mixins e Generics
 
 Diversi trait e classi astratte sono stati definiti per permettere l'implementazione di nuove funzionalità in modo
-modulare, utilizzando anche i generics per generalizzarne le funzionalità.\
-Questi sono stati sfruttati, ad esempio, per fornire proprietà aggiuntive ai vari _'Processors'_, fornendo a ciascuno
-di essi capacità aggiuntive per svolgere il proprio compito.
+modulare, utilizzando anche i _generics_ per generalizzarli.\
 
-Di seguito un esempio della classe _'PrologMethodProcessor'_ e _'PrologMethodExtractorUtils'_ che mediante mixin
-ottengono diverse proprietà utili a estrarre ed eseguire le informazioni Prolog annotate, come descritto in
+Di seguito un esempio della classe _'PrologMethodExtractorUtils'_ che mediante mixin
+ottiene diverse proprietà utili a estrarre ed eseguire le informazioni Prolog annotate, come descritto in
 precedenza:
-
-``` scala
-case class PrologMethodProcessor(classClauses: Option[Clauses])
-  extends PrologMethodExtractorUtils
-  with PrologAnnotationExecutor
-  with PrologProcessor:
-  /**
-   * Executes the @PrologMethod annotation, by extracting its method fields and the annotated method's arguments and
-   * parsing them to extract and query its theory.
-   *
-   * @param args   an optional array containing the arguments of the method annotated with @PrologMethod.
-   * @param method a Method that represents the method annotated with @PrologMethod.
-   * @return an Iterable containing the result of the goal
-   */
-  override def executeAnnotation(method: Method, args: Array[AnyRef]): Any =
-    // extracts the fields of the @PrologMethod annotation, then set the theory and solve the goal using tuProlog
-    val prologMethodAnnotation = method.getAnnotation(classOf[PrologMethod])
-    val fields = extractMethodFields(prologMethodAnnotation)
-    val rules = generateRules(fields)
-    val goal = generateGoal(Option(args), method, fields)
-    val solutions = computeAllSolutions(rules, goal)
-
-    // formats the output based on the return type specified in the annotation or inferred from the method
-    val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
-    val signaturesOption = fields.get("signatures").flatten.asInstanceOf[Option[Signature]]
-    (typesOption, signaturesOption) match
-      case (Some(types), Some(signatures)) => processTypesAndSignatures(solutions, types, signatures)
-      case _ => inferReturnType(solutions, method, args)
-```
 
 ``` scala
 /**
@@ -110,10 +79,10 @@ abstract class PrologMethodExtractorUtils
 L'utilizzo della laziness è stato sfruttato per rimandare l'esecuzione delle operazioni più pesanti di soluzione dei 
 goal Prolog a quando effettivamente necessario.
 
-Nella classe mostrata precedentemente, il metodo _'computeAllSolutions'_ utilizza una _'LazyList'_ per rimandare
+Nella classe _'PrologMethodProcessor'_, il metodo _'computeAllSolutions'_ utilizza una _'LazyList'_ per rimandare
 l'esecuzione della soluzione del goal Prolog solo quando richiesta (cioè solo quando si prova ad accedervi).
 
-Di seguito la porzione del metodo _'computeAllSolutions'_ della classe _'PrologMethodProcessor'_ citata, che calcola
+Di seguito la porzione del metodo _'computeAllSolutions'_ che calcola
 le soluzioni del goal Prolog solo fino a quando sono _'successes'_:
 
 ``` scala
