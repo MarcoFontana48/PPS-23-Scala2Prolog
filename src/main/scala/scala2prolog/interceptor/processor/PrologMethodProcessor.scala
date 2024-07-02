@@ -232,6 +232,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
       case _ => None
 
     //return the solutions by assembling previously declared functions and collecting them in a collection
+    //since it's using a lazy list, this computation is suspended and done only when needed
     for
       //iterate over each Try[SolveInfo] and its index in the LazyList. Take the results as long as they are successful
       (solveInfoTry, index) <- initializeLazyListFn(computeNextSolutionFn).takeWhile(_.isSuccess).zipWithIndex
