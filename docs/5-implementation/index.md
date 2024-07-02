@@ -1,19 +1,17 @@
 # Implementazione
 
-Praticamente ogni meccanismo avanzato di Scala che è stato affrontato durante il corso è stato utilizzato nel progetto.
-
-In particolare, si è fatto uso di mixins, generics e laziness per rendere il codice più flessibile e performante.
-
-Di seguito gli esempi sull'utilizzo di ciascuno:
+Praticamente ogni meccanismo avanzato di Scala che è stato affrontato durante il corso è stato utilizzato nel progetto.\
+In particolare, si è fatto uso di mixins, generics e laziness per rendere il codice più flessibile e performante.\
+Di seguito alcuni esempi sull'utilizzo di ciascuno di essi:
 
 ## Mixins e Generics
 
 Diversi trait e classi astratte sono stati definiti per permettere l'implementazione di nuove funzionalità in modo
-modulare, utilizzando anche i generics per generalizzarne le funzionalità.
+modulare, utilizzando anche i generics per generalizzarne le funzionalità.\
 Questi sono stati sfruttati, ad esempio, per fornire proprietà aggiuntive ai vari _'Processors'_, fornendo a ciascuno
-proprietà aggiuntive per svolgere il proprio compito.
+di essi capacità aggiuntive per svolgere il proprio compito.
 
-Di seguito un esempio per la classe _'PrologMethodProcessor'_ e _'PrologMethodExtractorUtils'_ che mediante mixin
+Di seguito un esempio della classe _'PrologMethodProcessor'_ e _'PrologMethodExtractorUtils'_ che mediante mixin
 ottengono diverse proprietà utili a estrarre ed eseguire le informazioni Prolog annotate, come descritto in
 precedenza:
 
@@ -116,7 +114,7 @@ Nella classe mostrata precedentemente, il metodo _'computeAllSolutions'_ utilizz
 l'esecuzione della soluzione del goal Prolog solo quando richiesta (cioè solo quando si prova ad accedervi).
 
 Di seguito la porzione del metodo _'computeAllSolutions'_ della classe _'PrologMethodProcessor'_ citata, che calcola
-le soluzioni del goal Prolog solo fino a quando sono 'successi' e in modo lazy:
+le soluzioni del goal Prolog solo fino a quando sono _'successes'_:
 
 ``` scala
 // Compute the goal solutions
