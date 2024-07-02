@@ -1,17 +1,20 @@
 # Esempio di utilizzo
 
 Un esempio di applicazione è stato realizzato per mostrare come sia possibile utilizzare la libreria per integrare 
-Prolog in un progetto Scala, implementando una variante del problema di scacchi delle N regine (NPieces):
+Prolog in un progetto Scala, implementando una variante del problema di scacchi delle [N regine](https://en.wikipedia.org/wiki/Eight_queens_puzzle) (NPieces):
+
+Definiamo una classe come `@PrologClass`, che conterrà le regole generali che saranno utilizzate dai metodi 
+`@PrologMethod` per risolvere il problema mediante l'utilizzo di Prolog.
+
+I metodi `@PrologMethod` contengono regole specifiche per risolvere il problema delle N regine e delle N torri,
+ogni regola definita all'interno di un metodo annotato con `@PrologMethod` è valida solamente per il metodo stesso, tutte
+le regole definite all'interno di `@PrologClass` sono comuni a tutti i metodi annotati che la classe implementa.
+
+I metodi Scala `n_queens` e `n_rooks`, essendo annotati con `@PrologMethod` e appartenendo alla stessa classe, condividono
+le regole definite nell'annotazione `@PrologClass` ma definiscono regole aggiuntive utilizzabili solamente da loro stessi:
 
 ``` scala
-trait Scala2PrologDeclarationNPIecesTest extends Logging:
-  /**
-   * returns the solutions for the N-queens problem (N x N board), using the tuProlog engine.
-   *
-   * @param N number of queens
-   * @param Qs solution
-   * @return the solutions for the N-queens as Iterable of Term
-   */
+trait NPieces:
   @PrologMethod(clauses = Array(
     "n_queens(N, Qs) :- range(1, N, Ns), permutation(Ns, Qs), safe(Qs).",
     "safe([]).",
@@ -26,14 +29,6 @@ trait Scala2PrologDeclarationNPIecesTest extends Logging:
     "safe([]).",
     "safe([R|Rs]) :- not(member(R, Rs)), safe(Rs)."
   ))
-
-  /**
-   * returns the solutions for the N-rooks problem (N x N board), using the tuProlog engine.
-   *
-   * @param N number of rooks
-   * @param Rs solution
-   * @return the solutions for the N-rooks as Iterable of Term
-   */
   def n_rooks(N: Int, Rs: String): Iterable[Term] = null // this body is never executed
 
 @PrologClass(clauses = Array(
@@ -44,8 +39,11 @@ trait Scala2PrologDeclarationNPIecesTest extends Logging:
   "select(X, [X|Xs], Xs).",
   "select(X, [Y|Ys], [Y|Zs]) :- select(X, Ys, Zs)."
 ))
-class Scala2PrologDeclarationNPiecesTestImpl extends Scala2PrologDeclarationNPIecesTest
+class NPiecesImpl extends NPieces
 ```
+
+Per utilizzare quanto definito prima, è necessario creare un proxy per oggetti della classe `NPiecesImpl` e chiamare
+i metodi `n_queens` e `n_rooks` per ottenere le soluzioni del problema delle N regine e delle N torri:
 
 ``` scala
 @main
@@ -61,19 +59,12 @@ def main(): Unit =
   println(s"2 rooks positions: ${n_rooks_solution.toList}")     // computed: List([1, 2], [2, 1])
 ```
 
-In questo esempio, viene formulato il problema delle 'N regine' e una sua variante 'N torri', definendo due metodi
-`n_queens` e `n_rooks` annotati con `@PrologMethod` che calcolano le posizioni delle regine e delle torri 
-rispettivamente, in modo tale che non si attacchino tra di loro.\
-Si noti che le regole definite all'interno dei metodi annotati con `@PrologMethod` non sono condivise con altri metodi.
+Altri esempi sono disponibili nei test che sono stati utilizzati per verificare il corretto funzionamento della libreria.
 
-La classe `NPiecesImpl` è annotata con `@PrologClass` e contiene le clausole Prolog generali (che sono utilizzate nello
-specifico, dai metodi annotati) per calcolare le soluzioni del problema delle N regine ed N torri.\
-Queste regole sono condivise tra tutti i metodi annotati con `@PrologMethod` che appartengono alla stessa classe.
+\
+Di seguito una spiegazione approfondita riguardo al funzionamento del codice Prolog definito sopra:
 
-I metodi `n_queens` e `n_rooks` definiscono solo le clausole, il nome del metodo Scala e gli argomenti definiscono il 
-goal da utilizzare per ricavare le soluzioni.
-
-Regole definite all'interno della classe:
+Regole definite all'interno del trait `NPieces` e della classe `NPiecesImpl`:
 - `range`: genera una lista di numeri da M a N (inclusi). 
   Se M è minore di N, incrementa M di 1 (M1) e chiama ricorsivamente la funzione `range` con: M incrementato, N e il 
   resto della lista.
@@ -129,9 +120,6 @@ Regole definite nel metodo `n_rooks`:
   verificando se ci sono righe (R) con lo stesso valore delle colonne (Rs), se non ci sono elementi in comune tra righe
   e colonne, nessuna le torre è sono in conflitto con le altre.
 
-\
-Altri esempi sono disponibili nei test che sono stati utilizzati per verificare il corretto funzionamento della libreria.
-
 [Torna al sommario](../index.md) |
-[Capitolo precedente (implementazione)](../5-implementation/index.md) |
-[Capitolo successivo (conclusione)](../7-conclusion/index.md)
+[Capitolo precedente (testing)](../6-testing/index.md) |
+[Capitolo successivo (conclusione)](../8-conclusion/index.md)

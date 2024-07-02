@@ -1,19 +1,12 @@
 # Processo di sviluppo
 
-Diversi strumenti e metodologie di sviluppo sono state utilizzate per garantire la buona realizzazione del progetto
+Diversi strumenti sono stati utilizzati per garantire la buona realizzazione del progetto
 
-## Test Driven Development (TDD)
-Per lo sviluppo del codice si è scelto di applicare il più possibile il _Test Driven Development (TDD)_, anticipando
-la fase di testing alla scrittura del codice, e implementando il codice di conseguenza.
-Questo ha permesso di scrivere rapidamente codice funzionante e testato, minimizzando gli errori durante lo sviluppo.
-
-Il processo _TDD_ è composto da diversi step _(Red-Green-Refactor)_ che sono ripetuti ciclicamente:
-1. **Red**: definizione del test che inizialmente fallirà (da cui il nome _'Red'_), per una specifica funzione ancora da implementare
-2. **Green**: scrittura del codice che superi (da cui il nome _'Green'_) il test definito al punto precedente
-3. **Refactor**: riscrittura del codice con lo scopo di migliorarlo, senza modificarne il risultato
-
+## Testing e Coverage
 Per la scrittura dei test è stata utilizzata la libreria _'scalatest'_, che permette di scrivere test in modo molto
-simile al linguaggio umano permettendo a chiunque la comprensione del funzionamento del sistema.
+simile al linguaggio umano permettendo a chiunque la comprensione del funzionamento del sistema.\
+Per garantire la copertura dei test è stato utilizzato il plugin _'sbt-scoverage'_, che permette di calcolare la percentuale
+di righe di codice coperte dai test.
 
 ## Quality Assurance
 Per il controllo qualità del sistema, è stato utilizzato un formatter per lo stile del codice scala:  '_scalafmt'_, che 

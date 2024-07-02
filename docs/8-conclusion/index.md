@@ -7,4 +7,4 @@ Tutti i test effettuati hanno avuto esito positivo su ogni piattaforma su cui è
 e Windows) e sono reperibili dal repository GitHub del progetto.
 
 [Torna al sommario](../index.md) |
-[Capitolo precedente (esempio di utilizzo)](../6-example/index.md)
+[Capitolo precedente (esempio di utilizzo)](../7-example/index.md)

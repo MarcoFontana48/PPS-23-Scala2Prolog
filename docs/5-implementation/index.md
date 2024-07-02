@@ -153,4 +153,4 @@ yield
 
 [Torna al sommario](../index.md) |
 [Capitolo precedente (design)](../4-design/index.md) |
-[Capitolo successivo (esempio di utilizzo)](../6-example/index.md)
+[Capitolo successivo (testing)](../6-testing/index.md)
