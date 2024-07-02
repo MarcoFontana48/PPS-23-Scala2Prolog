@@ -89,8 +89,7 @@ Regole definite all'interno del trait `NPieces` e della classe `NPiecesImpl`:
 Regole definite nel metodo `n_queens`:
 - `safe`: verifica se la regina Q0 è in una posizione sicura rispetto alla regina Q.\
   Le regine sono considerate in conflitto se sono sulla stessa riga o diagonale (le colonne saranno diverse perchè la
-  posizione di ogni regina è identificata dalla colonna e la permutazione di queste, che sono calcolate prima di questo, 
-  esclude elementi uguali).\
+  posizione di ogni regina è identificata dalla colonna e la permutazione di queste esclude elementi uguali).\
   Questo è verificato da Q0 =\= Q + D0 e Q0 =\= Q - D0, che verifica se due regine si trovano nella stessa diagonale: se
   la somma (nel caso di diagonali da alto-sinistra a basso-destra) tra le loro righe e colonne è la stessa, si trovano 
   nella stessa diagonale, se la differenza (nel caso di diagonali da basso-sinistra ad alto-destra) tra le loro righe e
