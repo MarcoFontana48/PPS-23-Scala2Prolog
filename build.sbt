@@ -1,4 +1,4 @@
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := "1.0.0"
 
 ThisBuild / scalaVersion := "3.3.3"
 
@@ -13,3 +13,12 @@ lazy val root = (project in file("."))
     name := "exam",
     idePackagePrefix := Some("pps.exam.application")
   )
+
+assemblyMergeStrategy in assembly := {
+  case PathList("module-info.class") => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
+
+assemblyJarName in assembly := s"Scala2Prolog-${version.value}.jar"
