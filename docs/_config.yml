@@ -1,0 +1,6 @@
+theme: jekyll-theme-primer
+title: PPS-23-Scala2Prolog
+description: "Project for the course of PPS A.Y.23/24"
+github:
+  private: false
+  repository_url: "https://github.com/MarcoFontana48/PPS-23-Scala2Prolog"
