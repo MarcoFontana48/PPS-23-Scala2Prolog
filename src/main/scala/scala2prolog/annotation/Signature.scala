@@ -20,17 +20,14 @@ object Signature extends Entity:
     }, {
       logger.trace(s"extracted signature from @Prolog* annotation: '$param', extracting input and output variables...")
 
-      /* pattern: (X1*) -> {Y1*} */
+      /* pattern: (X1, *) -> {Y1, *} */
       val pattern = "\\(([A-Z]\\w*(,\\s*[A-Z]\\w*)*)*\\)\\s*->\\s*\\{([A-Z]\\w*(,\\s*[A-Z]\\w*)*)*}".r
-      val matchOption = pattern.findFirstMatchIn(param)
+      val matches = pattern.findAllMatchIn(param).toList
 
-      matchOption match
-        case Some(m) =>
-          // index group 1 is 'input' variables, 2 is the arrow symbol of the signature, 3 is 'output' variables
-          val inputVars = Option(m.group(1)).map(_.split(",").map(_.trim)).getOrElse(Array.empty[String])
-          val outputVars = Option(m.group(3)).map(_.split(",").map(_.trim)).getOrElse(Array.empty[String])
-          logger.trace(s"extracted input and output variables from signature: 'input=${inputVars.mkString("Array(", ", ", ")")}', 'output=${outputVars.mkString("Array(", ", ", ")")}'")
-          Some(new Signature(inputVars, outputVars))
-        case None =>
-          throw new IllegalArgumentException(s"Invalid signature format: '$param'. Signature must be formatted as '(X1,X2,..Xn) -> {Y1,Y2,..Yn}'")
+      matches.headOption.flatMap { m =>
+        val inputVars = Option(m.group(1)).map(_.split(",").map(_.trim)).getOrElse(Array.empty[String])
+        val outputVars = Option(m.group(3)).map(_.split(",").map(_.trim)).getOrElse(Array.empty[String])
+        logger.trace(s"extracted input and output variables from signature: 'input=${inputVars.mkString("Array(", ", ", ")")}', 'output=${outputVars.mkString("Array(", ", ", ")")}'")
+        Some(new Signature(inputVars, outputVars))
+      }.orElse(throw new IllegalArgumentException(s"Invalid signature format: '$param'. Signature must be formatted as '(X1,X2,..Xn) -> {Y1,Y2,..Yn}'"))
     })

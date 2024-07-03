@@ -15,7 +15,7 @@ import java.lang.reflect.{InvocationHandler, Method}
  * call.
  */
 object PrologHandler extends Handler:
-  def apply(originalObject: Any): InvocationHandler =
+  def apply[A](originalObject: A): InvocationHandler =
     if originalObject.getClass.isAnnotationPresent(classOf[PrologClass]) then
       logger.trace(s"originalObject '$originalObject' is annotated with @PrologClass, extracting its clauses...")
       val maybeClauses = PrologClassProcessor.extractClauses(originalObject.getClass.getAnnotation(classOf[PrologClass]))
@@ -31,7 +31,7 @@ object PrologHandler extends Handler:
  *
  * @param originalObject the original object, methods calls of this object annotated with @PrologMethod are intercepted
  */
-class PrologHandler(var classClauses: Option[Clauses], originalObject: Any)
+case class PrologHandler[A](var classClauses: Option[Clauses], originalObject: A)
   extends InvocationHandler
   with Handler:
   /**

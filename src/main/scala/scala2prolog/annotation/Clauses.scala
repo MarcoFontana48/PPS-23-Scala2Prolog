@@ -1,8 +1,6 @@
 package pps.exam.application
 package scala2prolog.annotation
 
-import alice.tuprolog.*
-
 /**
  * Case class that represents the 'clauses' method field of the @PrologMethod annotation.
  *

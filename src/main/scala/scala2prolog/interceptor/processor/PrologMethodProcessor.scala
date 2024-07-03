@@ -34,8 +34,9 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
     val prologMethodAnnotation = method.getAnnotation(classOf[PrologMethod])
     val fields = extractMethodFields(prologMethodAnnotation)
     val rules = generateRules(fields)
+    val computeWithRulesCurry = computeAllSolutions(rules)    // curried function to initially set the rules and then compute the solutions with the goal in a different step
     val goal = generateGoal(Option(args), method, fields)
-    val solutions = computeAllSolutions(rules, goal)
+    val solutions = computeWithRulesCurry(goal)               // compute the solutions with the goal
 
     // formats the output based on the return type specified in the annotation or inferred from the method
     val typesOption = fields.get("types").flatten.asInstanceOf[Option[Types]]
@@ -149,18 +150,25 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
      * @return a Term that represents the guessed goal to solve.
      */
     def guessGoal(argsList: List[AnyRef], method: Method): Term =
+
       /**
-       * Formats the element in a valid prolog format.
-       * Checks if argument 'elements' has 'List(...)' elements and formats them as '[...]', otherwise leaves them as
-       * they are
+       * Formats the given element into a valid Prolog format.
+       * If the element is a List, it recursively formats each element of the List, including nested Lists,
+       * and represents them as Prolog lists (i.e., enclosed in square brackets and separated by commas).
+       * Non-List elements are converted to their string representation.
        *
-       * @param element an element to format.
-       * @return a string that represents the formatted element.
+       * @param element The element to format, which can be of any type.
+       * @return A string representation of the element in Prolog format.
        */
-      def formatElement(element: Any): String = element match {
-        case list: List[_] => list.map(formatElement).mkString("[", ",", "]") // format list and nested lists
-        case other => other.toString
-      }
+      def formatElement(element: Any): String =
+        @tailrec
+        def formatListHelper(elements: List[Any], acc: String): String = elements match {
+          case Nil => acc
+          case head :: tail => formatListHelper(tail, acc + (if (acc.isEmpty) "" else ",") + formatElement(head))
+        }
+        element match
+          case list: List[_] => "[" + formatListHelper(list, "") + "]"
+          case other => other.toString
 
       // formats the arguments of the method in a valid prolog format
       val formattedArgs = argsList.map(formatElement)
@@ -187,7 +195,7 @@ case class PrologMethodProcessor(classClauses: Option[Clauses])
    * @param goal  a Term containing the goal to solve.
    * @return an Iterable containing all the results of the goal
    */
-  private def computeAllSolutions(rules: String, goal: Term): Iterable[SolveInfo] =
+  private def computeAllSolutions(rules: String)(goal: Term): Iterable[SolveInfo] =
     val engine = Prolog()
 
     /**
