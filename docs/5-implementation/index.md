@@ -223,7 +223,7 @@ La ricorsione tail è stata utilizzata per ottimizzare le prestazioni di ogni me
 riportato in questo esempio del metodo _'formatElement'_ della classe _'PrologMethodProcessor'_ che formatta un elemento
 in un formato Prolog valido.\
 La ricorsione tail è un tipo di ricorsione dove la chiamata ricorsiva è l'ultima operazione della funzione,
-questo le di eseguire tutte le computazioni necessarie prima di effettuare la ricorsione.\
+questo le permette di eseguire tutte le computazioni necessarie prima di effettuare la ricorsione.\
 Il compilatore può utilizzare in questo modo una ottimizzazione per rendere questa più efficiente.\
 (Alcune variabili hanno tipo 'Any' perchè la libreria java _'reflection'_ permette di
 accedere ad argomenti dei metodi solo come Java 'Object' per via della _type erasure_, si è cercato di utilizzarne il
