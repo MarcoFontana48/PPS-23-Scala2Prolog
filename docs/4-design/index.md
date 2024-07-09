@@ -15,7 +15,7 @@ Il sistema è composto da diverse classi Scala che si occupano di estrarre e/o e
 
 ### Diagrammi delle classi
 
-![UML-class-annotations](..\img\S2P_UML_class_diagram-Processor(Annotations).drawio.svg)
+![UML-class-annotations](..\img\S2P_UML_class_diagram-Entity-Processor(Annotations).drawio.svg)
 
 **Annotazioni**: diverse classi sono state definite per specificare le informazioni Prolog all'interno di annotazioni.
   - **PrologMethod**: annotazione da utilizzare esclusivamente su metodi Scala, definiscono diverse informazioni Prolog. Può essere utilizzata in due modi differenti:
@@ -40,7 +40,7 @@ classi a seguire.
 
 I possibili _method fields_ delle annotazioni sono i 4 citati in precedenza (_predicate_, _types_, _signature_, _clauses_), ciascuno di essi è rappresentato da una classe Scala che contiene codice per estrarre l'informazione contenuta nel campo mediante _companion object_ per generare un'istanza della classe mediante _apply method_. Ognuno di essi implementa il _trait_ _'Entity'_ che identifica la classe come _method field_ delle annotazioni, ed è utilizzato dal _companion object_ per verificare che il rispettivo campo sia stato definito.
 
-![UML-class-Interceptor](..\img\S2P_UML_class_diagram-Interceptor.drawio.svg)
+![UML-class-Interceptor](..\img\S2P_UML_class_diagram-Entity-Interceptor.drawio.svg)
 
 La classe _'Scala2Prolog'_ è il punto di accesso per eseguire i metodi prolog annotati, permette di creare un oggetto
 _proxy_ a partire da un oggetto originale che contiene annotazioni prolog.
