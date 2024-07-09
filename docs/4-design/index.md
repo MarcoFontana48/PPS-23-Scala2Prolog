@@ -1,11 +1,14 @@
 # Design
 
 ## Design architetturale
-Il sistema è composto da un singolo modulo che contiene tutto il codice necessario.
+Il sistema è composto da un singolo modulo e diversi package che contengono tutto il codice necessario.
 
-Di seguito il diagramma delle classi complessivo che sarà discusso nel dettaglio nella prossima sezione:
+![UML-package-architecture](..\img\S2P_UML_package_diagram.drawio.svg)
 
-![UML-class-Entity](..\img\S2P_UML_class_diagram-full diagram.drawio.svg)
+Il package _'annotation'_ contiene classi e annotazioni per definire informazioni Prolog che verranno estratte ed 
+eseguite nelle classi contenute in: 
+- _'interceptor'_, che si occupa di intercettare le chiamate ai metodi annotati e fornire le informazioni estratte alle classi contenute nel package _'processor'_
+- _'processor'_, che si occupa di estrarre e/o eseguire le informazioni Prolog associate alle annotazioni
 
 ## Design di dettaglio
 Il sistema è composto da diverse classi Scala che si occupano di estrarre e/o eseguire informazioni prolog associate alle annotazioni definite nel codice sorgente.
@@ -25,7 +28,13 @@ Il sistema è composto da diverse classi Scala che si occupano di estrarre e/o e
   - **PrologClass**: annotazione da utilizzare esclusivamente su classi Scala, utilizzate per definire una _teoria_ prolog comune a tutti i metodi della classe annotata. Ogni metodo annotato con _PrologMethod_ può definire proprie regole prolog che sono da considerarsi in aggiunta a quelle definite in _PrologClass_, regole così specificate sono valide solo per il metodo in cui sono definite. Se un metodo non ha regole prolog definite nella propria annotazione, verranno considerate solamente quelle definite in _PrologClass_.
   - **PrologAddSharedClauses**: annotazione da utilizzare esclusivamente su metodi Scala, permette di aggiungere, dal momento in cui il metodo viene invocato, regole prolog che sono condivise tra tutti i metodi della classe _PrologClass_ di cui fa parte. Queste regole verranno aggiunte a quelle definite in _PrologClass_ come estensione della teoria prolog comune a tutti i metodi della classe.
 
-Per ciascuna annotazione è definita una classe omonima _'Processor'_ che si occupa di estrarre e/o eseguire informazioni prolog associate ad una specifica annotazione. Ciascuna di esse implementa il _trait_ _'Processor'_ che identifica la classe come processor.
+Per ciascuna annotazione è stata definita una classe omonima _'Processor'_ che si occupa di estrarre e/o eseguire 
+informazioni prolog associate a una specifica annotazione (ciascuna di esse implementa il _trait_ _'Processor'_ che 
+identifica la classe come processor).\
+Per rendere più chiara e immediata la comprensione dei diagrammi e le relazioni tra le classi, sono stati associati dei
+colori unici alle seguenti classi: _'PrologClassProcessor'_, _'PrologMethodProcessor'_, 
+_'PrologAddSharedClasusesProcessor'_ e le rispettive classi _'Utils'_, che sono stati usati per tutti i diagrammi delle 
+classi a seguire.
 
 ![UML-class-Entity](..\img\S2P_UML_class_diagram-Entity.drawio.svg)
 
